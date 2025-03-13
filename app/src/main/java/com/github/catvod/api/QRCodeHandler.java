@@ -114,8 +114,8 @@ public class QRCodeHandler {
             put("query_token", queryToken);
             put("request_id", reqId);
         }});
-
-        showQRCode(qrCode);
+        Init.run(() -> showQRCode(qrCode));
+        
         Init.execute(() -> startService());
         /*Map<String, Object> result = new HashMap<>();
         result.put("qrcode", "data:image/png;base64," + qrCode);
