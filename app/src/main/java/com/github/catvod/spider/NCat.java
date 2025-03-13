@@ -50,7 +50,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name = element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
+                String name = element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -72,7 +72,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -142,7 +142,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").attr("data-original");
                 String url = element.attr("href");
-                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
