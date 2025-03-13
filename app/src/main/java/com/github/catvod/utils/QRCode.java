@@ -1,7 +1,8 @@
 package com.github.catvod.utils;
 
 import android.graphics.Bitmap;
-
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -41,4 +42,15 @@ public class QRCode {
             return null;
         }
     }
+
+    public static Bitmap base64StringToImage(String strBase64) {
+        try {
+            byte[] arr = android.util.Base64.decode(strBase64, Base64.NO_WRAP);
+            Bitmap bmp = BitmapFactory.decodeByteArray(arr, 0, arr.length);
+            return bmp;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
 }

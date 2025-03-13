@@ -351,6 +351,16 @@ public class Util {
         return hexString.toString();
     }
 
+    public static String sha256Hex(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] messageDigest = md.digest(input.getBytes(Charset.defaultCharset()));
+            return bytesToHex(messageDigest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public static class LCSResult {
         public int length;

@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.uc.Cache;
@@ -26,25 +25,23 @@ import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.*;
 import com.google.gson.Gson;
-
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class UCApi {
     private String apiUrl = "https://pc-api.uc.cn/1/clouddrive/";
     private String cookie = "";
+    private String cookieToken = "";
     private String ckey = "";
     private Map<String, Map<String, Object>> shareTokenCache = new HashMap<>();
     private String pr = "pr=UCBrowser&fr=pc";
@@ -59,6 +56,7 @@ public class UCApi {
 
     private AlertDialog dialog;
     private String serviceTicket;
+    private QRCodeHandler qrCodeHandler;
 
     public Object[] proxyVideo(Map<String, String> params) throws Exception {
         String url = Util.base64Decode(params.get("url"));
@@ -163,6 +161,8 @@ public class UCApi {
         Init.checkPermission();
 
         cache = Cache.objectFrom(Path.read(getCache()));
+        qrCodeHandler = new QRCodeHandler();
+        this.cookieToken = cache.getUser().getToken();
     }
 
     public File getCache() {
@@ -681,10 +681,20 @@ public class UCApi {
             if (saveFileId == null) return null;
             this.saveFileIdCaches.put(fileId, saveFileId);
         }
-        Map<String, Object> down = Json.parseSafe(api("file/download?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("fids", List.of(this.saveFileIdCaches.get(fileId))), 0, "POST"), Map.class);
+
+        //token 为空，扫码登录
+        if (StringUtils.isBlank(cookieToken)) {
+            cookieToken = qrCodeHandler.startUC_TOKENScan();
+            SpiderDebug.log("扫码登录获取到的cookieToken: " + cookieToken);
+        }
+        SpiderDebug.log("cookieToken不为空: " + cookieToken + ";开始下载");
+        qrCodeHandler.download(cookieToken, this.saveFileIdCaches.get(fileId));
+
+
+       /* Map<String, Object> down = Json.parseSafe(api("file/download?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("fids", List.of(this.saveFileIdCaches.get(fileId))), 0, "POST"), Map.class);
         if (down.get("data") != null) {
             return ((List<Map<String, Object>>) down.get("data")).get(0).get("download_url").toString();
-        }
+        }*/
         return null;
     }
 
