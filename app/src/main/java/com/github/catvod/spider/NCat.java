@@ -50,7 +50,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name = element.select("img").attr("title");
+                String name = element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -72,7 +72,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name = element.select("img").attr("title");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -142,7 +142,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").attr("data-original");
                 String url = element.attr("href");
-                String name = element.select("img").attr("title");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "");
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -168,7 +168,7 @@ public class NCat extends Spider {
             Matcher playSourceMatcher = playSourcePattern.matcher(doc.html());
             //playSourceMatcher.find();
             String srcUrl = Util.findByRegex("https?://[^\\s/$.?#].+\\.m3u8", doc.html(), 0);
-            if(StringUtils.isNoneBlank(srcUrl)){
+            if (StringUtils.isNoneBlank(srcUrl)) {
                 return Result.get().url(srcUrl).header(getHeaders()).string();
 
             }
