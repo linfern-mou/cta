@@ -1,7 +1,6 @@
 {
   "spider": "https://androidcatvodspider.netlify.app/jar/custom_spider.jar;md5;1ea1c432790a89e507efefc8afb7f41b",
   "lives": [
-
     {
       "name": "电视直播",
       "type": "0",
@@ -38,7 +37,7 @@
   "sites": [
     {
       "key": "Introduce",
-      "name": "注意事项",
+      "name": "Cookie设置",
       "type": 3,
       "api": "csp_Introduce"
     },
@@ -120,7 +119,8 @@
       "searchable": 1,
       "changeable": 1,
       "ext": "{\"site\": [\"http://mucpan.cc/\",\"http://milvdou.fun/\"]}"
-    },{
+    },
+    {
       "key": "至臻视觉",
       "name": "至臻视觉|Pan",
       "type": 3,
@@ -137,7 +137,8 @@
       "searchable": 1,
       "changeable": 1,
       "ext": {}
-    }, {
+    },
+    {
       "key": "DianYingYunJi",
       "name": "电影云集",
       "type": 3,
@@ -313,7 +314,7 @@
       "changeable": 0,
       "ext": {}
     },
-     {
+    {
       "key": "YunPanBa",
       "name": "云盘吧",
       "type": 3,
