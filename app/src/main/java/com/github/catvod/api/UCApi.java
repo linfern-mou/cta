@@ -700,7 +700,7 @@ public class UCApi {
         //token不为空
         if (StringUtils.isNoneBlank(cookieToken)) {
             SpiderDebug.log("cookieToken不为空: " + cookieToken + ";开始下载");
-            qrCodeHandler.download(cookieToken, this.saveFileIdCaches.get(fileId));
+            return qrCodeHandler.download(cookieToken, this.saveFileIdCaches.get(fileId));
         } else {
             Map<String, Object> down = Json.parseSafe(api("file/download?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("fids", List.of(this.saveFileIdCaches.get(fileId))), 0, "POST"), Map.class);
             if (down.get("data") != null) {

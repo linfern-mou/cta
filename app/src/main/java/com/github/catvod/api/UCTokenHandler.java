@@ -224,16 +224,17 @@ public class UCTokenHandler {
         return Map.of("status", "EXPIRED");
     }
 
-    public void download(String token, String saveFileId) throws Exception {
+    public String download(String token, String saveFileId) throws Exception {
         SpiderDebug.log("开始下载:" + saveFileId + ";token:" + token);
         String pathname = "/file";
-        String timestamp = Long.toString(System.currentTimeMillis() / 1000);
+        String timestamp = String.valueOf(new Date().getTime() / 1000 + 1) + "000";
         String deviceID = StringUtils.isAllBlank((String) addition.get("DeviceID")) ? (String) addition.get("DeviceID") : generateDeviceID(timestamp);
         String reqId = generateReqId(deviceID, timestamp);
         String xPanToken = generateXPanToken("GET", pathname, timestamp, (String) conf.get("signKey"));
 
         Map<String, String> headers = new HashMap<>();
-        headers.put("Accept-Encoding", "gzip");
+        //headers.put("Accept-Encoding", "gzip");
+        headers.put("content-type", "text/plain;charset=UTF-8");
         headers.put("User-Agent", "Mozilla/5.0 (Linux; U; Android 13; zh-cn; M2004J7AC Build/UKQ1.231108.001) AppleWebKit/533.1 (KHTML, like Gecko) Mobile Safari/533.1");
         headers.put("x-pan-tm", timestamp);
         headers.put("x-pan-token", xPanToken);
@@ -254,15 +255,17 @@ public class UCTokenHandler {
         params.put("device_gpu", "Adreno (TM) 550");
         params.put("activity_rect", URLEncoder.encode("{}", "UTF-8"));
         params.put("channel", (String) conf.get("channel"));
-        params.put("method", "streaming");
+        params.put("method", "download");
         params.put("group_by", "source");
         params.put("fid", saveFileId);
         params.put("resolution", "low,normal,high,super,2k,4k");
         params.put("support", "dolby_vision");
 
         OkResult okResult1 = OkHttp.get(API_URL + pathname, params, headers);
-        SpiderDebug.log("uc TV 下载文件内容：" + okResult1.getBody());
-
+        JsonObject obj = Json.safeObject(okResult1.getBody());
+        String downloadUrl = obj.get("data").getAsJsonObject().get("download_url").getAsString();
+        SpiderDebug.log("uc TV 下载文件内容：" + downloadUrl);
+        return downloadUrl;
     }
 
     /**
