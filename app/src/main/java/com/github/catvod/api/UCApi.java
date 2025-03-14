@@ -87,7 +87,7 @@ public class UCApi {
         cache = Cache.objectFrom(Path.read(getCache()));
         tokenCache = Cache.objectFrom(Path.read(qrCodeHandler.getCache()));
 
-        this.cookieToken = tokenCache.getUser().getToken();
+        this.cookieToken = tokenCache.getUser().getCookie();
         SpiderDebug.log("UC初始化获取到的cookieToken: " + cookieToken);
     }
 

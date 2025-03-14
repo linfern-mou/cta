@@ -2,6 +2,7 @@ package com.github.catvod.bean.uc;
 
 import com.github.catvod.api.UCApi;
 import com.github.catvod.api.UCTokenHandler;
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.spider.Init;
 import com.github.catvod.utils.Path;
 import com.google.gson.Gson;
@@ -14,6 +15,7 @@ public class Cache {
 
 
     public static Cache objectFrom(String str) {
+        SpiderDebug.log("Cache.objectFrom: " + str);
         Cache item = new Gson().fromJson(str, Cache.class);
         return item == null ? new Cache() : item;
     }
