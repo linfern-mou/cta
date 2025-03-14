@@ -255,7 +255,7 @@ public class UCTokenHandler {
         params.put("device_gpu", "Adreno (TM) 550");
         params.put("activity_rect", URLEncoder.encode("{}", "UTF-8"));
         params.put("channel", (String) conf.get("channel"));
-        params.put("method", "download");
+        params.put("method", "streaming");
         params.put("group_by", "source");
         params.put("fid", saveFileId);
         params.put("resolution", "low,normal,high,super,2k,4k");
