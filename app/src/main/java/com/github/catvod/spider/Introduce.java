@@ -31,7 +31,7 @@ public class Introduce extends Spider {
         String pic2 = "https://androidcatvodspider.netlify.app/wechat.png";
         String name2 = "本接口不收费，请不要付费，谢谢！";
         list.add(new Vod("https://androidcatvodspider.netlify.app/wechat.png", name2, pic2));
-        return Result.string(classes,list);
+        return Result.string(classes, list);
     }
 
 
@@ -57,7 +57,18 @@ public class Introduce extends Spider {
             qrCodeHandler.startUC_TOKENScan();
         }
         Vod item = new Vod();
+        item.setVodId(vodId);
+        item.setVodName("公众号");
+        item.setVodPic("https://androidcatvodspider.netlify.app/wechat.png");
+        item.setVodRemarks("");
+        item.setVodPlayFrom("公众号");
+        item.setVodPlayUrl("https://test-streams.mux.dev/x36xhzz/url_6/193039199_mp4_h264_aac_hq_7.m3u8");
+        item.setVodDirector("公众号");
         return Result.string(item);
     }
 
+    @Override
+    public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
+        return Result.get().url("https://test-streams.mux.dev/x36xhzz/url_6/193039199_mp4_h264_aac_hq_7.m3u8").string();
+    }
 }
