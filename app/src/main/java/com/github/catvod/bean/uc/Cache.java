@@ -1,6 +1,7 @@
 package com.github.catvod.bean.uc;
 
 import com.github.catvod.api.UCApi;
+import com.github.catvod.api.UCTokenHandler;
 import com.github.catvod.spider.Init;
 import com.github.catvod.utils.Path;
 import com.google.gson.Gson;
@@ -26,6 +27,14 @@ public class Cache {
         this.save();
     }
 
+    public void setTokenUser(User user) {
+        this.user = user;
+        this.saveToken();
+    }
+
+    public void saveToken() {
+        Init.execute(() -> Path.write(new UCTokenHandler().getCache(), toString()));
+    }
 
     public void save() {
         Init.execute(() -> Path.write(UCApi.get().getCache(), toString()));
