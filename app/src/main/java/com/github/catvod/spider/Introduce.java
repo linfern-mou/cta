@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import com.github.catvod.api.QRCodeHandler;
+import com.github.catvod.api.UCTokenHandler;
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
@@ -53,7 +53,7 @@ public class Introduce extends Spider {
 
         //UC Token 扫码
         if (vodId.equals("UCToken")) {
-            QRCodeHandler qrCodeHandler = new QRCodeHandler();
+            UCTokenHandler qrCodeHandler = new UCTokenHandler();
             qrCodeHandler.startUC_TOKENScan();
         }
         Vod item = new Vod();

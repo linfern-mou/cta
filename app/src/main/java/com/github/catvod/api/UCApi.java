@@ -51,12 +51,13 @@ public class UCApi {
     private final String saveDirName = "TV";
     private boolean isVip = false;
     private final Cache cache;
+    private final Cache tokenCache;
     private ScheduledExecutorService service;
 
 
     private AlertDialog dialog;
     private String serviceTicket;
-    private QRCodeHandler qrCodeHandler;
+    private UCTokenHandler qrCodeHandler;
 
     private Map<String, String> getHeaders() {
         Map<String, String> headers = new HashMap<>();
@@ -82,10 +83,11 @@ public class UCApi {
 
     private UCApi() {
         Init.checkPermission();
-
+        qrCodeHandler = new UCTokenHandler();
         cache = Cache.objectFrom(Path.read(getCache()));
-        qrCodeHandler = new QRCodeHandler();
-        this.cookieToken = cache.getUser().getToken();
+        tokenCache = Cache.objectFrom(Path.read(qrCodeHandler.getCache()));
+
+        this.cookieToken = tokenCache.getUser().getToken();
     }
 
     private static class Loader {
@@ -167,6 +169,7 @@ public class UCApi {
     public File getCache() {
         return Path.tv("uc");
     }
+
 
     public Vod getVod(ShareData shareData) throws Exception {
         getShareToken(shareData);
@@ -693,7 +696,7 @@ public class UCApi {
             this.saveFileIdCaches.put(fileId, saveFileId);
         }
 
-        //token 为空，扫码登录
+        //token不为空
         if (StringUtils.isNoneBlank(cookieToken)) {
             SpiderDebug.log("cookieToken不为空: " + cookieToken + ";开始下载");
             qrCodeHandler.download(cookieToken, this.saveFileIdCaches.get(fileId));

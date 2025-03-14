@@ -7,6 +7,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import com.github.catvod.bean.uc.Cache;
+import com.github.catvod.bean.uc.User;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
@@ -15,6 +17,7 @@ import com.github.catvod.utils.*;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Date;
@@ -25,7 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class QRCodeHandler {
+public class UCTokenHandler {
     private static final String CLIENT_ID = "5acf882d27b74502b7040b0c65519aa7";
     private static final String SIGN_KEY = "l3srvtd7p42l0d0x1u8d7yc8ye9kki4d";
     private static final String API_URL = "https://open-api-drive.uc.cn";
@@ -39,8 +42,13 @@ public class QRCodeHandler {
 
     private ScheduledExecutorService service;
     private AlertDialog dialog;
+    private final Cache cache;
 
-    public QRCodeHandler() {
+    public File getCache() {
+        return Path.tv("uctoken");
+    }
+
+    public UCTokenHandler() {
         addition.put("DeviceID", "07b48aaba8a739356ab8107b5e230ad4");
         conf.put("api", API_URL);
         conf.put("clientID", CLIENT_ID);
@@ -48,6 +56,7 @@ public class QRCodeHandler {
         conf.put("appVer", "1.6.8");
         conf.put("channel", "UCTVOFFICIALWEB");
         conf.put("codeApi", CODE_API_URL);
+        cache = Cache.objectFrom(Path.read(getCache()));
     }
 
     private String generateUUID() {
@@ -115,8 +124,8 @@ public class QRCodeHandler {
             put("request_id", reqId);
         }});
         Init.run(() -> showQRCode(qrCode));
-        
-        Init.execute(() -> startService());
+
+        Init.execute(this::startService);
         /*Map<String, Object> result = new HashMap<>();
         result.put("qrcode", "data:image/png;base64," + qrCode);
         result.put("status", "NEW");*/
@@ -132,7 +141,7 @@ public class QRCodeHandler {
         }
 
         String pathname = "/oauth/code";
-        String timestamp = String.valueOf(new Date().getTime() / 1000) + "000";
+        String timestamp = String.valueOf(new Date().getTime() / 1000 + 1) + "000";
         String deviceID = StringUtils.isAllBlank((String) addition.get("DeviceID")) ? (String) addition.get("DeviceID") : generateDeviceID(timestamp);
         String reqId = generateReqId(deviceID, timestamp);
         String xPanToken = generateXPanToken("GET", pathname, timestamp, (String) conf.get("signKey"));
@@ -164,7 +173,7 @@ public class QRCodeHandler {
 
         OkResult okResult = OkHttp.get(API_URL + pathname, params, headers);
 
-
+//扫码成功
         if (okResult.getCode() == 200) {
             JsonObject resData = Json.safeObject(okResult.getBody());
             String code = resData.get("code").getAsString();
@@ -172,7 +181,7 @@ public class QRCodeHandler {
             pathname = "/token";
             reqId = generateReqId(deviceID, timestamp);
 
-            Map<String, Object> postData = new HashMap<>();
+            Map<String, String> postData = new HashMap<>();
             postData.put("req_id", reqId);
             postData.put("app_ver", (String) conf.get("appVer"));
             postData.put("device_id", deviceID);
@@ -187,7 +196,7 @@ public class QRCodeHandler {
             postData.put("channel", (String) conf.get("channel"));
             postData.put("code", code);
 
-            OkResult okResult1 = OkHttp.post(API_URL + pathname, params, headers);
+            OkResult okResult1 = OkHttp.post(conf.get("codeApi") + pathname, Json.toJson(postData), headers);
 
 
             if (okResult1.getCode() == 200) {
@@ -195,7 +204,12 @@ public class QRCodeHandler {
                 platformStates.remove("UC_TOKEN");
                 Map<String, Object> result = new HashMap<>();
                 result.put("status", "CONFIRMED");
-                result.put("cookie", tokenResData.get("access_token").getAsString());
+                result.put("cookie", tokenResData.get("data").getAsJsonObject().get("access_token").getAsString());
+                SpiderDebug.log("uc Token获取成功：" + tokenResData.get("data").getAsJsonObject().get("access_token").getAsString());
+
+                //保存到本地
+                cache.setUser(User.objectFrom(tokenResData.get("data").getAsJsonObject().get("access_token").getAsString()));
+
                 //停止检验线程，关闭弹窗
                 stopService();
                 return result;
@@ -295,6 +309,8 @@ public class QRCodeHandler {
 
         service.scheduleWithFixedDelay(() -> {
             try {
+                SpiderDebug.log("----checkUC_TOKENStatus中");
+
                 checkUC_TOKENStatus();
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
