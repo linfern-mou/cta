@@ -225,6 +225,7 @@ public class UCTokenHandler {
     }
 
     public void download(String token, String saveFileId) throws Exception {
+        SpiderDebug.log("开始下载:" + saveFileId + ";token:" + token);
         String pathname = "/file";
         String timestamp = Long.toString(System.currentTimeMillis() / 1000);
         String deviceID = StringUtils.isAllBlank((String) addition.get("DeviceID")) ? (String) addition.get("DeviceID") : generateDeviceID(timestamp);
@@ -259,7 +260,7 @@ public class UCTokenHandler {
         params.put("resolution", "low,normal,high,super,2k,4k");
         params.put("support", "dolby_vision");
 
-        OkResult okResult1 = OkHttp.post(API_URL + pathname, params, headers);
+        OkResult okResult1 = OkHttp.get(API_URL + pathname, params, headers);
         SpiderDebug.log("uc TV 下载文件内容：" + okResult1.getBody());
 
     }
