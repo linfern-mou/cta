@@ -226,7 +226,19 @@ public class UCApi {
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
+
+        //UCTV 可以直接播放，不需要代理
+        if (testVideo(playUrl)) {
+            return Result.get().url(playUrl).octet().header(header).string();
+        }
         return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
+    }
+
+    private boolean testVideo(String url) {
+
+        OkResult okResult1 = OkHttp.get(url, new HashMap<>(), Map.of("Range", "bytes=0-0"));
+        return okResult1.getCode() == 206;
+
     }
 
     private String proxyVideoUrl(String url, Map<String, String> header) {
