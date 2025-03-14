@@ -229,7 +229,9 @@ public class UCApi {
 
         //UCTV 可以直接播放，不需要代理
         if (testVideo(playUrl)) {
-            return Result.get().url(playUrl).octet().header(header).string();
+            SpiderDebug.log("UCTV 可以直接播放，不需要代理" );
+
+            return Result.get().url(playUrl).string();
         }
         return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
     }
