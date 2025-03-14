@@ -263,7 +263,7 @@ public class UCTokenHandler {
 
         OkResult okResult1 = OkHttp.get(API_URL + pathname, params, headers);
         JsonObject obj = Json.safeObject(okResult1.getBody());
-        String downloadUrl = obj.get("data").getAsJsonObject().get("download_url").getAsString();
+        String downloadUrl = obj.get("data").getAsJsonObject().get("video_info").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
         SpiderDebug.log("uc TV 下载文件内容：" + downloadUrl);
         return downloadUrl;
     }
