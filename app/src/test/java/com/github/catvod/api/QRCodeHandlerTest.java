@@ -27,6 +27,16 @@ public class QRCodeHandlerTest {
 
         }
 
+    } @Test
+    public void download() throws Exception {
+        // Mock the OkHttp.get method to return a predefined OkResult
+        // Execute the method under test
+        String result = qrCodeHandler.download();
+        System.out.println(result);
+        while(true){
+
+        }
+
     }
 
 
