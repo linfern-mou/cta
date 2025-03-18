@@ -63,7 +63,7 @@ public class TianYiHandler {
         return null;
     }
 
-    public byte[] downloadQRCode(String uuid, String cookie) throws IOException {
+    public byte[] downloadQRCode(String uuid, String reqId,String cookie) throws IOException {
 
 
         Map<String, String> headers = new HashMap<>();
@@ -186,7 +186,7 @@ public class TianYiHandler {
         String encryuuid = uuidInfo.get("encryuuid").getAsString();
 
         // Step 2: Get QR Code
-        byte[] byteStr = downloadQRCode(encryuuid, secondCookie);
+        byte[] byteStr = downloadQRCode(encryuuid, reqId,secondCookie);
 
         Init.run(() -> showQRCode(byteStr));
         // Step 3: Check login status
