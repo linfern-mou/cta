@@ -43,6 +43,14 @@ public class QRCode {
         }
     }
 
+    public static Bitmap Bytes2Bimap(byte[] b) {
+        if (b.length != 0) {
+            return BitmapFactory.decodeByteArray(b, 0, b.length);
+        } else {
+            return null;
+        }
+    }
+
     public static Bitmap base64StringToImage(String strBase64) {
         try {
             byte[] arr = android.util.Base64.decode(strBase64, Base64.NO_WRAP);
