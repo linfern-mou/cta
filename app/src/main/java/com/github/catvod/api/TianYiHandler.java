@@ -182,6 +182,8 @@ public class TianYiHandler {
         headers.put("Reqid", reqId);
         headers.put("cookie", secondCookie);
         OkResult okResult = OkHttp.post("https://open.e.189.cn/api/logbox/oauth2/qrcodeLoginState.do", params, headers);
+        SpiderDebug.log("qrcodeLoginState result------" + okResult.getBody());
+
         JsonObject obj = Json.safeObject(okResult.getBody()).getAsJsonObject();
         if (okResult.getCode() == 200 && Objects.nonNull(obj.get("status")) && obj.get("status").getAsInt() == 0) {
             SpiderDebug.log("扫码成功------" + obj.get("redirectUrl").getAsString());
