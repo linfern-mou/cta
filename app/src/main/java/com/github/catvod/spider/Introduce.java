@@ -1,6 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+import com.github.catvod.api.TianYiHandler;
 import com.github.catvod.api.UCTokenHandler;
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
@@ -24,6 +25,7 @@ public class Introduce extends Spider {
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         classes.add(new Class("1", "UC"));
+        classes.add(new Class("2", "天翼"));
         List<Vod> list = new ArrayList<>();
         String pic = "https://androidcatvodspider.netlify.app/wechat.png";
         String name = "关注公众号";
@@ -44,6 +46,12 @@ public class Introduce extends Spider {
             String name = "点击设置Token";
             vodList.add(new Vod("UCToken", name, pic));
         }
+        //天翼
+        if (tid.equals("2")) {
+            String pic = "https://androidcatvodspider.netlify.app/wechat.png";
+            String name = "点击设置cookie";
+            vodList.add(new Vod("天翼cookie", name, pic));
+        }
         return Result.get().vod(vodList).string();
     }
 
@@ -55,6 +63,10 @@ public class Introduce extends Spider {
         if (vodId.equals("UCToken")) {
             UCTokenHandler qrCodeHandler = new UCTokenHandler();
             qrCodeHandler.startUC_TOKENScan();
+        }
+        if (vodId.equals("天翼cookie")) {
+            TianYiHandler qrCodeHandler = new TianYiHandler();
+            qrCodeHandler.startScan();
         }
         Vod item = new Vod();
         item.setVodId(vodId);

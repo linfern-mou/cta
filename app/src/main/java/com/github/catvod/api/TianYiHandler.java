@@ -8,6 +8,7 @@ import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.github.catvod.bean.uc.Cache;
+import com.github.catvod.bean.uc.User;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
@@ -20,7 +21,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +29,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static org.apache.commons.lang3.time.DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT;
 
 public class TianYiHandler {
 
@@ -44,91 +42,13 @@ public class TianYiHandler {
 
     private String indexUrl = "";
 
+    private String reqId;
+    private String lt;
+
     public TianYiHandler() {
 
         cache = Cache.objectFrom(Path.read(getCache()));
     }
-
-    public JsonObject getUUID() throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("appId", "E_189");
-        Map<String, String> headers = new HashMap<>();
-        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
-
-        OkResult okResult = OkHttp.post("https://open.e.189.cn/api/logbox/oauth2/getUUID.do", params, headers);
-        if (okResult.getCode() == 200) {
-            return Json.safeObject(okResult.getBody());
-        }
-
-        return null;
-    }
-
-    public byte[] downloadQRCode(String uuid, String reqId,String cookie) throws IOException {
-
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
-
-        headers.put("referer", indexUrl);
-        headers.put("cookie", cookie);
-        //  OkResult okResult = OkHttp.get("https://open.e.189.cn/api/logbox/oauth2/image.do", params, headers);
-
-        HttpUrl url = HttpUrl.parse("https://open.e.189.cn/api/logbox/oauth2/image.do").newBuilder().addQueryParameter("uuid", uuid).addQueryParameter("REQID", reqId).build();
-
-        Request request = new Request.Builder().url(url).headers(Headers.of(headers)).build();
-        Response response = OkHttp.newCall(request);
-        if (response.code() == 200) {
-            return response.body().bytes();
-        }
-        return null;
-    }
-
-
-    private Map<String, Object> checkLoginStatus(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl, String secondCookie) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("appId", "E_189");
-        params.put("encryuuid", encryuuid);
-        params.put("uuid", uuid);
-        params.put("date", DateFormatUtils.format(new Date(),"yyyy-MM-ddHH:mm:ss")+new Random().nextInt(24));;
-        params.put("returnUrl", URLEncoder.encode(returnUrl, "UTF-8"));
-        params.put("clientType", "1");
-        params.put("timeStamp", String.valueOf(System.currentTimeMillis()));
-        params.put("cb_SaveName", "0");
-        params.put("isOauth2", "false");
-        params.put("state", "");
-        params.put("paramId", paramId);
-        Map<String, String> headers = new HashMap<>();
-        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
-        headers.put("lt", lt);
-        headers.put("origin", "https,//open.e.189.cn");
-        headers.put("referer", indexUrl);
-        headers.put("Reqid", reqId);
-        OkResult okResult = OkHttp.post("https://open.e.189.cn/api/logbox/oauth2/qrcodeLoginState.do", params, headers);
-        JsonObject obj = Json.safeObject(okResult.getBody()).getAsJsonObject();
-        if (okResult.getCode() == 200 && obj.get("status").getAsInt() == 0) {
-
-            String redirectUrl = obj.get("redirectUrl").getAsString();
-            Map<String, Object> result = new HashMap<>();
-            fetchUserInfo(redirectUrl, secondCookie, result);
-        }
-
-
-        return null;
-    }
-
-    private void fetchUserInfo(String redirectUrl, String secondCookie, Map<String, Object> result) throws IOException {
-
-        Map<String, String> params = new HashMap<>();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Cookie", secondCookie);
-        Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, headers);
-       /* if (okResult.getCode() == 200) {
-            okResult.getBody();
-        }*/
-        return ;
-
-    }
-
 
     public byte[] startScan() throws Exception {
 
@@ -140,10 +60,13 @@ public class TianYiHandler {
             String cookie1 = split[0];
             cookieList.add(cookie1);
         }
-        String firstCookie = StringUtils.join(cookieList, ";");
-        String index = OkHttp.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", firstCookie));
+        //String firstCookie = StringUtils.join(cookieList, ";");
+        SpiderDebug.log("index ori: " + "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=dff95dced0b03d9d972d920f03ddd05e");
+        String index = OkHttp.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", ""));
+        SpiderDebug.log("index red: " + index);
         Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, new HashMap<>());
-        indexUrl =resHeaderMap.get("Location").get(0);
+        indexUrl = resHeaderMap.get("Location").get(0);
+        SpiderDebug.log("indexUrl red: " + indexUrl);
 
         cookieList.clear();
         for (String s : resHeaderMap.get("Set-Cookie")) {
@@ -152,11 +75,13 @@ public class TianYiHandler {
             cookieList.add(cookie1);
         }
         String secondCookie = StringUtils.join(cookieList, ";");
-        HttpUrl httpParams = HttpUrl.parse(indexUrl);
-        String reqId = httpParams.queryParameter("reqId");
-        String lt = httpParams.queryParameter("lt");
-        Map<String, String> tHeaders = new HashMap<>();
+        SpiderDebug.log("secondCookie: " + secondCookie);
 
+        HttpUrl httpParams = HttpUrl.parse(indexUrl);
+        reqId = httpParams.queryParameter("reqId");
+        lt = httpParams.queryParameter("lt");
+
+        Map<String, String> tHeaders = new HashMap<>();
         tHeaders.put("Content-Type", "application/x-www-form-urlencoded");
         tHeaders.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0");
         tHeaders.put("Referer", indexUrl);
@@ -178,24 +103,128 @@ public class TianYiHandler {
             paramId = "";
             returnUrl = "";
         }
-
+        SpiderDebug.log("paramId: " + paramId);
+        SpiderDebug.log("returnUrl: " + returnUrl);
 
         // Step 1: Get UUID
         JsonObject uuidInfo = getUUID();
         String uuid = uuidInfo.get("uuid").getAsString();
         String encryuuid = uuidInfo.get("encryuuid").getAsString();
+        String encodeuuid = uuidInfo.get("encodeuuid").getAsString();
 
         // Step 2: Get QR Code
-        byte[] byteStr = downloadQRCode(encryuuid, reqId,secondCookie);
+        byte[] byteStr = downloadQRCode(encodeuuid, reqId, secondCookie);
 
         Init.run(() -> showQRCode(byteStr));
         // Step 3: Check login status
         // return
-        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, paramId, returnUrl, firstCookie));
+        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, paramId, returnUrl, secondCookie));
         /*Map<String, Object> result = new HashMap<>();
         result.put("qrcode", "data:image/png;base64," + qrCode);
         result.put("status", "NEW");*/
         return byteStr;
+
+    }
+
+    public JsonObject getUUID() {
+        Map<String, String> params = new HashMap<>();
+        params.put("appId", "cloud");
+        Map<String, String> headers = new HashMap<>();
+        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
+        headers.put("lt", lt);
+        headers.put("reqId", reqId);
+        headers.put("referer", indexUrl);
+
+        OkResult okResult = OkHttp.post("https://open.e.189.cn/api/logbox/oauth2/getUUID.do", params, headers);
+        if (okResult.getCode() == 200) {
+            return Json.safeObject(okResult.getBody());
+        }
+        return null;
+    }
+
+    public byte[] downloadQRCode(String uuid, String reqId, String cookie) throws IOException {
+
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
+
+        headers.put("referer", indexUrl);
+        headers.put("cookie", cookie);
+        //  OkResult okResult = OkHttp.get("https://open.e.189.cn/api/logbox/oauth2/image.do", params, headers);
+//.addQueryParameter("uuid", uuid).addQueryParameter("REQID", reqId)
+        HttpUrl url = HttpUrl.parse("https://open.e.189.cn/api/logbox/oauth2/image.do?uuid=" + uuid + "&REQID=" + reqId).newBuilder().build();
+
+        Request request = new Request.Builder().url(url).headers(Headers.of(headers)).build();
+        Response response = OkHttp.newCall(request);
+        if (response.code() == 200) {
+            return response.body().bytes();
+        }
+        return null;
+    }
+
+
+    private Map<String, Object> checkLoginStatus(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl, String secondCookie) throws Exception {
+        Map<String, String> params = new HashMap<>();
+        params.put("appId", "cloud");
+        params.put("encryuuid", encryuuid);
+        params.put("uuid", uuid);
+        params.put("date", DateFormatUtils.format(new Date(), "yyyy-MM-ddHH:mm:ss") + new Random().nextInt(24));
+        params.put("returnUrl", URLEncoder.encode(returnUrl, "UTF-8"));
+        params.put("clientType", "1");
+        params.put("timeStamp", (System.currentTimeMillis() / 1000 + 1) + "000");
+        params.put("cb_SaveName", "0");
+        params.put("isOauth2", "false");
+        params.put("state", "");
+        params.put("paramId", paramId);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
+        headers.put("referer", indexUrl);
+        headers.put("Reqid", reqId);
+        headers.put("cookie", secondCookie);
+        OkResult okResult = OkHttp.post("https://open.e.189.cn/api/logbox/oauth2/qrcodeLoginState.do", params, headers);
+        JsonObject obj = Json.safeObject(okResult.getBody()).getAsJsonObject();
+        if (okResult.getCode() == 200 && Objects.nonNull(obj.get("status")) && obj.get("status").getAsInt() == 0) {
+            SpiderDebug.log("扫码成功------" + obj.get("redirectUrl").getAsString());
+            String redirectUrl = obj.get("redirectUrl").getAsString();
+            Map<String, Object> result = new HashMap<>();
+
+            fetchUserInfo(redirectUrl, secondCookie, result);
+
+
+        } else {
+            SpiderDebug.log("扫码失败------" + okResult.getBody());
+        }
+
+
+        return null;
+    }
+
+    private void fetchUserInfo(String redirectUrl, String secondCookie, Map<String, Object> result) throws IOException {
+
+        Map<String, String> params = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Cookie", secondCookie);
+        Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, headers);
+        SpiderDebug.log("扫码返回数据：" + Json.toJson(okResult));
+        if (okResult.containsKey("set-cookie")) {
+            List<String> cookieList = new ArrayList<>();
+            for (String s : okResult.get("set-cookie")) {
+
+                String[] split = s.split(";");
+                String cookie1 = split[0];
+                cookieList.add(cookie1);
+
+            }
+            cache.setTokenUser(User.objectFrom(StringUtils.join(cookieList, ";")));
+            SpiderDebug.log("获取cookie成功：" + StringUtils.join(cookieList, ";"));
+        }
+
+        //停止检验线程，关闭弹窗
+        stopService();
+       /* if (okResult.getCode() == 200) {
+            okResult.getBody();
+        }*/
+        return;
 
     }
 
@@ -247,7 +276,8 @@ public class TianYiHandler {
             SpiderDebug.log("----checkLoginStatus ing....");
             try {
                 checkLoginStatus(uuid, encryuuid, reqId, lt, paramId, returnUrl, secondCookie);
-            } catch (IOException e) {
+            } catch (Exception e) {
+                SpiderDebug.log("----checkLoginStatus error" + e.getMessage());
                 throw new RuntimeException(e);
             }
 
