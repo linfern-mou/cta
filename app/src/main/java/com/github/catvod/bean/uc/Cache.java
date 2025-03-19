@@ -1,5 +1,6 @@
 package com.github.catvod.bean.uc;
 
+import com.github.catvod.api.TianYiHandler;
 import com.github.catvod.api.UCApi;
 import com.github.catvod.api.UCTokenHandler;
 import com.github.catvod.crawler.SpiderDebug;
@@ -34,9 +35,19 @@ public class Cache {
         this.saveToken();
     }
 
+    public void setTianyiUser(User user) {
+        this.user = user;
+        this.saveTianyiUser();
+    }
+
+    public void saveTianyiUser() {
+        Init.execute(() -> Path.write(new TianYiHandler().getCache(), toString()));
+    }
+
     public void saveToken() {
         Init.execute(() -> Path.write(new UCTokenHandler().getCache(), toString()));
     }
+
 
     public void save() {
         Init.execute(() -> Path.write(UCApi.get().getCache(), toString()));
@@ -46,4 +57,6 @@ public class Cache {
     public String toString() {
         return new Gson().toJson(this);
     }
+
+
 }

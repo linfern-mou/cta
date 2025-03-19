@@ -215,7 +215,7 @@ public class TianYiHandler {
                 cookieList.add(cookie1);
 
             }
-            cache.setTokenUser(User.objectFrom(StringUtils.join(cookieList, ";")));
+            cache.setTianyiUser(User.objectFrom(StringUtils.join(cookieList, ";")));
             SpiderDebug.log("获取cookie成功：" + StringUtils.join(cookieList, ";"));
         }
 
