@@ -50,6 +50,7 @@ public class TianYiHandler {
         cache = Cache.objectFrom(Path.read(getCache()));
     }
 
+
     public byte[] startScan() throws Exception {
 
         OkResult okResult1 = OkHttp.get("https://ux.21cn.com/api/htmlReportRest/getJs.js?pid=25577E0DEEDF48ADBD4459911F5825E4", new HashMap<>(), new HashMap<>());
@@ -219,10 +220,11 @@ public class TianYiHandler {
             }
             cache.setTianyiUser(User.objectFrom(StringUtils.join(cookieList, ";")));
             SpiderDebug.log("获取cookie成功：" + StringUtils.join(cookieList, ";"));
+            //停止检验线程，关闭弹窗
+            stopService();
         }
 
-        //停止检验线程，关闭弹窗
-        stopService();
+
        /* if (okResult.getCode() == 200) {
             okResult.getBody();
         }*/
