@@ -204,7 +204,7 @@ public class TianyiApi {
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
-        return Result.get().url(playUrl).header(header).string();
+        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
 
@@ -487,9 +487,9 @@ public class TianyiApi {
 
             if (res.get("normal") != null) {
                 String normal = res.get("normal").getAsJsonObject().get("url").getAsString();
-                String downloadUrl = OkHttp.getLocation(normal, headers);
-                SpiderDebug.log("获取天翼下载地址成功:" + downloadUrl);
-                return downloadUrl;
+                //String downloadUrl = OkHttp.getLocation(normal, headers);
+                SpiderDebug.log("获取天翼下载地址成功:" + normal);
+                return normal;
             }
         } else {
             SpiderDebug.log("获取下载地址失败:" + result.getBody());
