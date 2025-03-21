@@ -486,7 +486,10 @@ public class TianyiApi {
         if (Objects.nonNull(res.get("res_code")) && res.get("res_code").getAsInt() == 0) {
 
             if (res.get("normal") != null) {
-                return res.get("normal").getAsJsonObject().get("url").getAsString();
+                String normal = res.get("normal").getAsJsonObject().get("url").getAsString();
+                String downloadUrl = OkHttp.getLocation(normal, headers);
+                SpiderDebug.log("获取天翼下载地址成功:" + downloadUrl);
+                return downloadUrl;
             }
         } else {
             SpiderDebug.log("获取下载地址失败:" + result.getBody());
