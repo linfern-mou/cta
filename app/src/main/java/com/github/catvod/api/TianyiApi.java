@@ -1,6 +1,5 @@
 package com.github.catvod.api;
 
-import android.app.AlertDialog;
 import android.text.TextUtils;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
@@ -13,13 +12,11 @@ import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.*;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -31,76 +28,18 @@ public class TianyiApi {
     private String apiUrl = "https://cloud.189.cn/api/open/share/";
     public static final String URL_START = "https://cloud.189.cn/";
     private String cookie = "";
-    private String ckey = "";
+
     private Map<String, JsonObject> shareTokenCache = new HashMap<>();
-    private String pr = "pr=ucpro&fr=pc";
-    private List<String> subtitleExts = Arrays.asList(".srt", ".ass", ".scc", ".stl", ".ttml");
-    private Map<String, String> saveFileIdCaches = new HashMap<>();
-    private String saveDirId = null;
-    private String saveDirName = "TV";
-    private boolean isVip = false;
+
+
     private final Cache cache;
     private ScheduledExecutorService service;
     private String sessionKey = "";
     private TianYiHandler tianYiHandler;
 
-    private AlertDialog dialog;
-    private String serviceTicket;
-
-    public Object[] proxyVideo(Map<String, String> params) throws Exception {
-        String url = Util.base64Decode(params.get("url"));
-        Map header = new Gson().fromJson(Util.base64Decode(params.get("header")), Map.class);
-        if (header == null) header = new HashMap<>();
-        List<String> arr = List.of("Range", "Accept", "Accept-Encoding", "Accept-Language", "Cookie", "Origin", "Referer", "Sec-Ch-Ua", "Sec-Ch-Ua-Mobile", "Sec-Ch-Ua-Platform", "Sec-Fetch-Dest", "Sec-Fetch-Mode", "Sec-Fetch-Site", "User-Agent");
-        for (String key : params.keySet()) {
-            for (String s : arr) {
-                if (s.toLowerCase().equals(key.toLowerCase())) {
-                    header.put(key, params.get(key));
-                }
-            }
-
-        }
-        if (Util.getExt(url).contains("m3u8")) {
-            return getM3u8(url, header);
-        }
-        return ProxyVideo.proxy(url, header);
-    }
-
-    /**
-     * 代理m3u8
-     *
-     * @param url
-     * @param header
-     * @return
-     */
-    private Object[] getM3u8(String url, Map header) {
-
-        OkResult result = OkHttp.get(url, new HashMap<>(), header);
-        String[] m3u8Arr = result.getBody().split("\n");
-        List<String> listM3u8 = new ArrayList<>();
-
-        String site = url.substring(0, url.lastIndexOf("/")) + "/";
-        int mediaId = 0;
-        for (String oneLine : m3u8Arr) {
-            String thisOne = oneLine;
-            if (oneLine.contains(".ts")) {
-                thisOne = proxyVideoUrl(site + thisOne, header);
-                mediaId++;
-            }
-            listM3u8.add(thisOne);
-        }
-        String m3u8Str = TextUtils.join("\n", listM3u8);
-        String contentType = result.getResp().get("Content-Type").get(0);
-
-        Map<String, String> respHeaders = new HashMap<>();
-        for (String key : result.getResp().keySet()) {
-            respHeaders.put(key, result.getResp().get(key).get(0));
-        }
-        return new Object[]{result.getCode(), contentType, new ByteArrayInputStream(m3u8Str.getBytes(Charset.forName("UTF-8"))), respHeaders};
-    }
 
     public String[] getPlayFormatList() {
-        return new String[]{"原画"};
+        return new String[]{"天意"};
     }
 
     private static class Loader {
@@ -134,9 +73,9 @@ public class TianyiApi {
 
 
     public void init(String cookie) throws Exception {
-        this.ckey = Util.MD5(cookie);
+
         this.cookie = cookie;
-        // this.isVip = getVip();
+
         getUserSizeInfo();
         this.sessionKey = getUserBriefInfo();
     }
@@ -353,7 +292,7 @@ public class TianyiApi {
     private String getUserSizeInfo() throws Exception {
         OkResult result = OkHttp.get("https://cloud.189.cn/api/portal/getUserSizeInfo.action", new HashMap<>(), getHeaders());
         JsonObject res = Json.safeObject(result.getBody());
-        if (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey")) {
+        if (res.isEmpty() || (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey"))) {
             tianYiHandler.startScan();
         }
         return "";

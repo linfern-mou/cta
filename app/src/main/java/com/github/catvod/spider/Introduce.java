@@ -25,7 +25,7 @@ public class Introduce extends Spider {
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         classes.add(new Class("1", "UC"));
-        classes.add(new Class("2", "天翼"));
+        classes.add(new Class("2", "天意"));
         List<Vod> list = new ArrayList<>();
         String pic = "https://androidcatvodspider.netlify.app/wechat.png";
         String name = "关注公众号";
