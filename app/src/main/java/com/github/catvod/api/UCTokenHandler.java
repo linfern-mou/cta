@@ -216,7 +216,10 @@ public class UCTokenHandler {
             }
 
         } else if (okResult.getCode() == 400) {
+            SpiderDebug.log("uc Token获取失败：" +okResult.getBody());
+
             return Map.of("status", "NEW");
+
         }
 
 
