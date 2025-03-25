@@ -7,8 +7,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import com.github.catvod.bean.uc.Cache;
-import com.github.catvod.bean.uc.User;
+
+import com.github.catvod.bean.tianyi.Cache;
+import com.github.catvod.bean.tianyi.User;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;

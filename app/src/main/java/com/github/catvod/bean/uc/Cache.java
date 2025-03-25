@@ -35,14 +35,7 @@ public class Cache {
         this.saveToken();
     }
 
-    public void setTianyiUser(User user) {
-        this.user = user;
-        this.saveTianyiUser();
-    }
 
-    public void saveTianyiUser() {
-        Init.execute(() -> Path.write(new TianYiHandler().getCache(), toString()));
-    }
 
     public void saveToken() {
         Init.execute(() -> Path.write(new UCTokenHandler().getCache(), toString()));
