@@ -73,9 +73,9 @@ public class TianYiHandler {
     public byte[] startScan() throws Exception {
 
         OkResult okResult1 = OkHttp.get("https://ux.21cn.com/api/htmlReportRest/getJs.js?pid=25577E0DEEDF48ADBD4459911F5825E4", new HashMap<>(), new HashMap<>());
-        List<String> cookie = okResult1.getResp().get("Set-Cookie");
-        List<String> cookieList = getCookieList(cookie);
-        //String firstCookie = StringUtils.join(cookieList, ";");
+
+        getCookieMap(okResult1.getResp().get("Set-Cookie"));
+        this.cookie = mapToCookie(cookieMap);
         SpiderDebug.log("index ori: " + "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=dff95dced0b03d9d972d920f03ddd05e");
         String index = OkHttp.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", ""));
         SpiderDebug.log("index red: " + index);
@@ -83,17 +83,16 @@ public class TianYiHandler {
         indexUrl = resHeaderMap.get("Location").get(0);
         SpiderDebug.log("indexUrl red: " + indexUrl);
 
-        cookieList.clear();
 
-        cookieList = getCookieList(resHeaderMap.get("Set-Cookie"));
-        String secondCookie = StringUtils.join(cookieList, ";");
-        SpiderDebug.log("secondCookie: " + secondCookie);
+        getCookieMap(resHeaderMap.get("Set-Cookie"));
+        this.cookie = mapToCookie(cookieMap);
+        SpiderDebug.log("secondCookie: " + cookie);
 
         HttpUrl httpParams = HttpUrl.parse(indexUrl);
         reqId = httpParams.queryParameter("reqId");
         lt = httpParams.queryParameter("lt");
 
-        Result result = appConf(secondCookie);
+        Result result = appConf( this.cookie );
 
         // Step 1: Get UUID
         JsonObject uuidInfo = getUUID();
@@ -102,12 +101,12 @@ public class TianYiHandler {
         String encodeuuid = uuidInfo.get("encodeuuid").getAsString();
 
         // Step 2: Get QR Code
-        byte[] byteStr = downloadQRCode(encodeuuid, reqId, secondCookie);
+        byte[] byteStr = downloadQRCode(encodeuuid, reqId, cookie);
 
         Init.run(() -> showQRCode(byteStr));
         // Step 3: Check login status
         // return
-        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, result.paramId, result.returnUrl, secondCookie));
+        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, result.paramId, result.returnUrl, cookie));
         /*Map<String, Object> result = new HashMap<>();
         result.put("qrcode", "data:image/png;base64," + qrCode);
         result.put("status", "NEW");*/
