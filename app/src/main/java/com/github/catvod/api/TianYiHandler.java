@@ -92,7 +92,7 @@ public class TianYiHandler {
         reqId = httpParams.queryParameter("reqId");
         lt = httpParams.queryParameter("lt");
 
-        Result result = appConf( this.cookie );
+        Result result = appConf(this.cookie);
 
         // Step 1: Get UUID
         JsonObject uuidInfo = getUUID();
@@ -304,9 +304,12 @@ public class TianYiHandler {
         Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, headers);
         SpiderDebug.log("扫码返回数据：" + Json.toJson(okResult));
         if (okResult.containsKey("set-cookie")) {
-            List<String> cookieList = getCookieList(okResult.get("set-cookie"));
-            cache.setTianyiUser(User.objectFrom(StringUtils.join(cookieList, ";")));
-            SpiderDebug.log("获取cookie成功：" + StringUtils.join(cookieList, ";"));
+            getCookieMap(okResult.get("Set-Cookie"));
+            this.cookie = mapToCookie(cookieMap);
+            SpiderDebug.log("cookie: " + this.cookie);
+
+            cache.setTianyiUser(User.objectFrom(cookie));
+            SpiderDebug.log("获取cookie成功：" + cookie);
             //停止检验线程，关闭弹窗
             stopService();
         }
