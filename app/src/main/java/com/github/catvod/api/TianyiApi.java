@@ -295,7 +295,7 @@ public class TianyiApi {
         if (res.isEmpty() || (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey"))) {
            // tianYiHandler.startScan();
             //tianYiHandler.refreshCookie(cookie);
-            tianYiHandler.refreshCookie();
+            tianYiHandler.startScan();
         }
         return "";
 
