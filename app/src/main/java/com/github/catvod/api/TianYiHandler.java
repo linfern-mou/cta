@@ -37,9 +37,14 @@ public class TianYiHandler {
     private ScheduledExecutorService service;
     private AlertDialog dialog;
     private final Cache cache;
+    private final Cache ecache;
 
     public File getCache() {
         return Path.tv("tianyi");
+    }
+
+    public File geteCache() {
+        return Path.tv("tianyie");
     }
 
     private String indexUrl = "";
@@ -47,45 +52,51 @@ public class TianYiHandler {
     private String reqId;
     private String lt;
     private Map<String, String> cookieMap;
+    private Map<String, String> ecookieMap;
     private String cookie;
+    private String ecookie;
 
     public TianYiHandler() {
-        cookie = "";
+
         cookieMap = new HashMap<>();
+        ecookieMap = new HashMap<>();
         cache = Cache.objectFrom(Path.read(getCache()));
+        ecache = Cache.objectFrom(Path.read(geteCache()));
+        cookie = cache.getUser().getCookie();
+        ecookie = ecache.getUser().getCookie();
     }
 
-    public void refreshCookie(String cookie) throws IOException {
-        getCookieMap(List.of(cookie.split(";")));
-        this.cookie = mapToCookie(cookieMap);
+    public void refreshCookie() throws IOException {
 
-        String url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaeNameCheck=uncheck&browserId=dff95dced0b03d9d972d920f03ddd05e";
+
+        String url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html";
         String index = OkHttp.getLocation(url, Map.of("Cookie", this.cookie));
         SpiderDebug.log("index：" + index);
         SpiderDebug.log("index red: " + index);
-        Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, Map.of("Cookie", this.cookie));
-     
+        Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, Map.of("Cookie", this.ecookie));
+
         getCookieMap(resHeaderMap.get("Set-Cookie"));
         this.cookie = mapToCookie(cookieMap);
         indexUrl = resHeaderMap.get("Location").get(0);
         SpiderDebug.log("indexUrl red: " + indexUrl);
-        Map<String, List<String>> resHeaderMap2 = OkHttp.getLocationHeader(indexUrl, Map.of("Cookie", this.cookie));
+        OkResult okResult = OkHttp.get(indexUrl, new HashMap<>(), Map.of("Cookie", this.cookie));
 
-     /*    SpiderDebug.log("refreshCookie header：" + Json.toJson(okResult.getResp()));
+        SpiderDebug.log("refreshCookie header：" + Json.toJson(okResult.getResp()));
         if (okResult.getResp().containsKey("set-cookie")) {
-            List<String> cookieList = getCookieList(okResult.getResp().get("set-cookie"));
-            cache.setTianyiUser(User.objectFrom(StringUtils.join(cookieList, ";")));
-            SpiderDebug.log("获取cookie成功：" + StringUtils.join(cookieList, ";"));
+            getCookieMap(okResult.getResp().get("set-cookie"));
+            this.cookie = mapToCookie(cookieMap);
+            cache.setTianyiUser(User.objectFrom(cookie));
+            SpiderDebug.log("获取cookie成功：" + cookie);
 
-        }*/
+        }
     }
 
     public byte[] startScan() throws Exception {
 
-        OkResult okResult1 = OkHttp.get("https://ux.21cn.com/api/htmlReportRest/getJs.js?pid=25577E0DEEDF48ADBD4459911F5825E4", new HashMap<>(), new HashMap<>());
+       /* OkResult okResult1 = OkHttp.get("https://ux.21cn.com/api/htmlReportRest/getJs.js?pid=25577E0DEEDF48ADBD4459911F5825E4", new HashMap<>(), new HashMap<>());
 
         getCookieMap(okResult1.getResp().get("Set-Cookie"));
-        this.cookie = mapToCookie(cookieMap);
+        this.cookie = mapToCookie(cookieMap);*/
         SpiderDebug.log("index ori: " + "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=dff95dced0b03d9d972d920f03ddd05e");
         String index = OkHttp.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", ""));
         SpiderDebug.log("index red: " + index);
@@ -137,9 +148,9 @@ public class TianYiHandler {
             okResult = OkHttp.post(this.API_URL + url, params, headers);
         }
         if (okResult.getResp().get("Set-Cookie") != null) {
-            getCookieMap(okResult.getResp().get("Set-Cookie"));
-            this.cookie = mapToCookie(cookieMap);
-            SpiderDebug.log("cookie: " + this.cookie);
+            geteCookieMap(okResult.getResp().get("Set-Cookie"));
+            this.ecookie = mapToCookie(ecookieMap);
+            SpiderDebug.log("cookie: " + this.ecookie);
         }
 
         if (okResult.getCode() != 200 && leftRetry > 0) {
@@ -220,6 +231,21 @@ public class TianYiHandler {
 
     }
 
+    private void geteCookieMap(List<String> cookie) {
+
+        for (String s : cookie) {
+            String[] split = s.split(";");
+            String cookieItem = split[0].trim();
+            int equalsIndex = cookieItem.indexOf('=');
+            if (equalsIndex > 0) {
+                String key = cookieItem.substring(0, equalsIndex);
+                String value = equalsIndex < cookieItem.length() - 1 ? cookieItem.substring(equalsIndex + 1) : "";
+                ecookieMap.put(key, value);
+            }
+        }
+
+    }
+
     // 新增方法：Map转Cookie字符串
     private String mapToCookie(Map<String, String> map) {
         if (map == null || map.isEmpty()) return "";
@@ -293,9 +319,9 @@ public class TianYiHandler {
 
             SpiderDebug.log("扫码成功------" + obj.get("redirectUrl").getAsString());
             String redirectUrl = obj.get("redirectUrl").getAsString();
-            Map<String, Object> result = new HashMap<>();
 
-            fetchUserInfo(redirectUrl, secondCookie, result);
+
+            fetchUserInfo(redirectUrl, secondCookie);
 
 
         } else {
@@ -306,9 +332,9 @@ public class TianYiHandler {
         return null;
     }
 
-    private void fetchUserInfo(String redirectUrl, String secondCookie, Map<String, Object> result) throws IOException {
+    private void fetchUserInfo(String redirectUrl, String secondCookie) throws IOException {
 
-        Map<String, String> params = new HashMap<>();
+
         Map<String, String> headers = new HashMap<>();
         headers.put("Cookie", secondCookie);
         Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, headers);
@@ -316,10 +342,12 @@ public class TianYiHandler {
         if (okResult.containsKey("set-cookie")) {
             getCookieMap(okResult.get("Set-Cookie"));
             this.cookie = mapToCookie(cookieMap);
-            SpiderDebug.log("cookie: " + this.cookie);
+
 
             cache.setTianyiUser(User.objectFrom(cookie));
+            ecache.setTianyieUser(User.objectFrom(ecookie));
             SpiderDebug.log("获取cookie成功：" + cookie);
+            SpiderDebug.log("获取ecookie成功：" + ecookie);
             //停止检验线程，关闭弹窗
             stopService();
         }
