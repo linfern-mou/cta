@@ -9,15 +9,14 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttpWithCookie;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
-import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import okhttp3.Cookie;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
@@ -140,13 +139,16 @@ public class TianyiApi {
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
+        List<String> cookies = new ArrayList<>();
+        for (String s : tianYiHandler.getCookieJar().getCookieStore().keySet()) {
+            for (Cookie cookie : tianYiHandler.getCookieJar().getCookieStore().get(s)) {
+                cookies.add(cookie.name() + "=" + cookie.value());
+            }
+        }
+        header.put("Cookie", TextUtils.join(";", cookies));
         return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
-
-    private String proxyVideoUrl(String url, Map<String, String> header) {
-        return String.format(Proxy.getUrl() + "?do=quark&type=video&url=%s&header=%s", Util.base64Encode(url.getBytes(Charset.defaultCharset())), Util.base64Encode(Json.toJson(header).getBytes(Charset.defaultCharset())));
-    }
 
     /**
      * @param url
