@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -34,6 +35,11 @@ public class SimpleCookieJar implements CookieJar {
 
     public SimpleCookieJar() {
         this.cache = Cache.objectFrom(Path.read(getCache()));
+        String cookieStr = cache.getUser().getCookie();
+        if (StringUtils.isNoneBlank(cookieStr)) {
+            JsonObject cookieJson = Json.safeObject(cookieStr);
+            setGlobalCookie(cookieJson);
+        }
     }
 
 
@@ -45,14 +51,14 @@ public class SimpleCookieJar implements CookieJar {
     public void saveFromResponse(HttpUrl url, @NotNull List<Cookie> cookies) {
         SpiderDebug.log("SimpleCookieJar saveFromResponse: " + url.host() + ": " + Json.toJson(cookies));
         // 创建可修改的 Cookie 列表副本
-        List<Cookie> oldCookies = cookieStore.get(url.host())!=null?cookieStore.get(url.host()):new ArrayList<>();
+        List<Cookie> oldCookies = cookieStore.get(url.host()) != null ? cookieStore.get(url.host()) : new ArrayList<>();
         List<Cookie> newCookies = new ArrayList<>(oldCookies);
 
         // 更新 Cookie
         for (Cookie newCookie : cookies) {
             // 移除同名的旧 Cookie
             for (Cookie oldCookie : newCookies) {
-                if(oldCookie.name().equals(newCookie.name())){
+                if (oldCookie.name().equals(newCookie.name())) {
                     oldCookies.remove(oldCookie);
                 }
             }
@@ -100,7 +106,7 @@ public class SimpleCookieJar implements CookieJar {
                 boolean hostOnly = cookieobj.get("hostOnly").getAsBoolean();
                 if (hostOnly) {
                     cookieBuilder.hostOnlyDomain(cookieobj.get("domain").getAsString());
-                }else {
+                } else {
                     cookieBuilder.domain(cookieobj.get("domain").getAsString());
 
                 }

@@ -35,7 +35,6 @@ public class TianYiHandler {
     private ScheduledExecutorService service;
     private AlertDialog dialog;
     private final Cache cache;
-    private final Cache ecache;
 
     public File getCache() {
         return Path.tv("tianyi");
@@ -56,8 +55,6 @@ public class TianYiHandler {
 
 
         cache = Cache.objectFrom(Path.read(getCache()));
-        ecache = Cache.objectFrom(Path.read(geteCache()));
-
         cookieJar = new SimpleCookieJar();
     }
 
