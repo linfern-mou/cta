@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.github.catvod.api.TianyiApi.URL_START;
 
@@ -29,10 +30,13 @@ public class Cloud extends Spider {
         uc = new UC();
         ali = new Ali();
         tianYi = new TianYi();
-        quark.init(context, ext.has("cookie") ? ext.get("cookie").getAsString() : "");
-        uc.init(context, ext.has("uccookie") ? ext.get("uccookie").getAsString() : "");
-        ali.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
-        tianYi.init(context, ext.has("tianyicookie") ? ext.get("tianyicookie").getAsString() : "");
+        if(Objects.nonNull(ext)){
+            quark.init(context, ext.has("cookie") ? ext.get("cookie").getAsString() : "");
+            uc.init(context, ext.has("uccookie") ? ext.get("uccookie").getAsString() : "");
+            ali.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
+            tianYi.init(context, ext.has("tianyicookie") ? ext.get("tianyicookie").getAsString() : "");
+        }
+
     }
 
     @Override
