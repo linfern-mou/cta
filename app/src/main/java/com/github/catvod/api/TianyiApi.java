@@ -235,7 +235,7 @@ public class TianyiApi {
     private String getUserSizeInfo() throws Exception {
         OkResult result = OkHttpWithCookie.get("https://cloud.189.cn/api/portal/getUserSizeInfo.action", new HashMap<>(), getHeaders(), cookieJar);
         JsonObject res = Json.safeObject(result.getBody());
-        if (res.isEmpty() || (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey"))) {
+        if (StringUtils.isAllBlank(result.getBody()) || (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey"))) {
             // tianYiHandler.startScan();
             tianYiHandler.refreshCookie();
             //tianYiHandler.startScan();
