@@ -53,7 +53,9 @@ public class TianyiApi {
         if (StringUtils.isNoneBlank(token)) {
             JsonObject obj = Json.safeObject(token);
             //初始化CookieJar
-            tianYiHandler.setCookie(obj);
+            if (Objects.nonNull(obj)) {
+                tianYiHandler.setCookie(obj);
+            }
         }
         getUserSizeInfo();
         this.sessionKey = getUserBriefInfo();
