@@ -8,9 +8,8 @@ import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.github.catvod.bean.tianyi.Cache;
-import com.github.catvod.bean.tianyi.User;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttp;
+import com.github.catvod.net.OkHttpWithCookie;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
 import com.github.catvod.utils.*;
@@ -19,7 +18,6 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,69 +49,69 @@ public class TianYiHandler {
 
     private String reqId;
     private String lt;
-    private Map<String, String> cookieMap;
-    private Map<String, String> ecookieMap;
-    private String cookie;
-    private String ecookie;
+
+    private SimpleCookieJar cookieJar;
 
     public TianYiHandler() {
 
-        cookieMap = new HashMap<>();
-        ecookieMap = new HashMap<>();
+
         cache = Cache.objectFrom(Path.read(getCache()));
         ecache = Cache.objectFrom(Path.read(geteCache()));
-        cookie = cache.getUser().getCookie();
-        ecookie = ecache.getUser().getCookie();
+
+        cookieJar = new SimpleCookieJar();
+    }
+
+    public SimpleCookieJar getCookieJar() {
+        return cookieJar;
+    }
+
+    public void setCookie(JsonObject cookie) {
+        cookieJar.setGlobalCookie(cookie);
     }
 
     public void refreshCookie() throws IOException {
 
 
-        String url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html";
-        String index = OkHttp.getLocation(url, Map.of("Cookie", this.cookie));
+        String url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=16322f24d9405fb83331c3f6ce971b53";
+        String index = OkHttpWithCookie.getLocation(url, Map.of("Cookie", ""), cookieJar);
         SpiderDebug.log("index：" + index);
         SpiderDebug.log("index red: " + index);
-        Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, Map.of("Cookie", this.ecookie));
+        Map<String, List<String>> resHeaderMap = OkHttpWithCookie.getLocationHeader(index, Map.of("Cookie", ""), cookieJar);
 
-        getCookieMap(resHeaderMap.get("Set-Cookie"));
-        this.cookie = mapToCookie(cookieMap);
+
         indexUrl = resHeaderMap.get("Location").get(0);
         SpiderDebug.log("indexUrl red: " + indexUrl);
-        OkResult okResult = OkHttp.get(indexUrl, new HashMap<>(), Map.of("Cookie", this.cookie));
+        OkResult okResult = OkHttpWithCookie.get(indexUrl, new HashMap<>(), Map.of("Cookie", ""), cookieJar);
 
         SpiderDebug.log("refreshCookie header：" + Json.toJson(okResult.getResp()));
-        if (okResult.getResp().containsKey("set-cookie")) {
-            getCookieMap(okResult.getResp().get("set-cookie"));
-            this.cookie = mapToCookie(cookieMap);
-            cache.setTianyiUser(User.objectFrom(cookie));
-            SpiderDebug.log("获取cookie成功：" + cookie);
 
-        }
     }
 
     public byte[] startScan() throws Exception {
+
 
        /* OkResult okResult1 = OkHttp.get("https://ux.21cn.com/api/htmlReportRest/getJs.js?pid=25577E0DEEDF48ADBD4459911F5825E4", new HashMap<>(), new HashMap<>());
 
         getCookieMap(okResult1.getResp().get("Set-Cookie"));
         this.cookie = mapToCookie(cookieMap);*/
         SpiderDebug.log("index ori: " + "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=dff95dced0b03d9d972d920f03ddd05e");
-        String index = OkHttp.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", ""));
+        String index = OkHttpWithCookie.getLocation("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=8d38da4344fba4699d13d6e6854319d7", Map.of("Cookie", ""), cookieJar);
         SpiderDebug.log("index red: " + index);
-        Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, new HashMap<>());
+        Map<String, List<String>> resHeaderMap = OkHttpWithCookie.getLocationHeader(index, new HashMap<>(), cookieJar);
+
         indexUrl = resHeaderMap.get("Location").get(0);
         SpiderDebug.log("indexUrl red: " + indexUrl);
 
 
-        getCookieMap(resHeaderMap.get("Set-Cookie"));
+      /*  getCookieMap(resHeaderMap.get("Set-Cookie"));
         this.cookie = mapToCookie(cookieMap);
-        SpiderDebug.log("secondCookie: " + cookie);
+        SpiderDebug.log("secondCookie: " + cookie);*/
 
         HttpUrl httpParams = HttpUrl.parse(indexUrl);
         reqId = httpParams.queryParameter("reqId");
         lt = httpParams.queryParameter("lt");
 
-        Result result = appConf(this.cookie);
+        Result result = appConf();
 
         // Step 1: Get UUID
         JsonObject uuidInfo = getUUID();
@@ -122,12 +120,12 @@ public class TianYiHandler {
         String encodeuuid = uuidInfo.get("encodeuuid").getAsString();
 
         // Step 2: Get QR Code
-        byte[] byteStr = downloadQRCode(encodeuuid, reqId, cookie);
+        byte[] byteStr = downloadQRCode(encodeuuid, reqId);
 
         Init.run(() -> showQRCode(byteStr));
         // Step 3: Check login status
         // return
-        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, result.paramId, result.returnUrl, cookie));
+        Init.execute(() -> startService(uuid, encryuuid, reqId, lt, result.paramId, result.returnUrl));
         /*Map<String, Object> result = new HashMap<>();
         result.put("qrcode", "data:image/png;base64," + qrCode);
         result.put("status", "NEW");*/
@@ -143,15 +141,15 @@ public class TianYiHandler {
 
         OkResult okResult;
         if ("GET".equals(method)) {
-            okResult = OkHttp.get(this.API_URL + url, params, headers);
+            okResult = OkHttpWithCookie.get(this.API_URL + url, params, headers, cookieJar);
         } else {
-            okResult = OkHttp.post(this.API_URL + url, params, headers);
+            okResult = OkHttpWithCookie.post(this.API_URL + url, params, headers, cookieJar);
         }
-        if (okResult.getResp().get("Set-Cookie") != null) {
+       /* if (okResult.getResp().get("Set-Cookie") != null) {
             geteCookieMap(okResult.getResp().get("Set-Cookie"));
             this.ecookie = mapToCookie(ecookieMap);
             SpiderDebug.log("cookie: " + this.ecookie);
-        }
+        }*/
 
         if (okResult.getCode() != 200 && leftRetry > 0) {
             SpiderDebug.log("请求" + url + " failed;");
@@ -165,11 +163,11 @@ public class TianYiHandler {
     /**
      * 获取appConf
      *
-     * @param secondCookie
+     * @param
      * @return
      */
 
-    private @NotNull Result appConf(String secondCookie) throws Exception {
+    private @NotNull Result appConf() throws Exception {
         Map<String, String> tHeaders = new HashMap<>();
         tHeaders.put("Content-Type", "application/x-www-form-urlencoded");
         tHeaders.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0");
@@ -177,7 +175,7 @@ public class TianYiHandler {
         tHeaders.put("origin", API_URL);
         tHeaders.put("Lt", lt);
         tHeaders.put("Reqid", reqId);
-        tHeaders.put("Cookie", secondCookie);
+        //tHeaders.put("Cookie", secondCookie);
         Map<String, String> param = new HashMap<>();
 
         param.put("version", "2.0");
@@ -215,46 +213,6 @@ public class TianYiHandler {
         return cookieList;
     }
 
-    // 现有方法：List转Map（已优化）
-    private void getCookieMap(List<String> cookie) {
-
-        for (String s : cookie) {
-            String[] split = s.split(";");
-            String cookieItem = split[0].trim();
-            int equalsIndex = cookieItem.indexOf('=');
-            if (equalsIndex > 0) {
-                String key = cookieItem.substring(0, equalsIndex);
-                String value = equalsIndex < cookieItem.length() - 1 ? cookieItem.substring(equalsIndex + 1) : "";
-                cookieMap.put(key, value);
-            }
-        }
-
-    }
-
-    private void geteCookieMap(List<String> cookie) {
-
-        for (String s : cookie) {
-            String[] split = s.split(";");
-            String cookieItem = split[0].trim();
-            int equalsIndex = cookieItem.indexOf('=');
-            if (equalsIndex > 0) {
-                String key = cookieItem.substring(0, equalsIndex);
-                String value = equalsIndex < cookieItem.length() - 1 ? cookieItem.substring(equalsIndex + 1) : "";
-                ecookieMap.put(key, value);
-            }
-        }
-
-    }
-
-    // 新增方法：Map转Cookie字符串
-    private String mapToCookie(Map<String, String> map) {
-        if (map == null || map.isEmpty()) return "";
-        List<String> joiner = new ArrayList<>();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            joiner.add(entry.getKey() + "=" + entry.getValue());
-        }
-        return StringUtils.join(joiner, ";");
-    }
 
     public JsonObject getUUID() throws InterruptedException {
         Map<String, String> params = new HashMap<>();
@@ -271,20 +229,20 @@ public class TianYiHandler {
 
     }
 
-    public byte[] downloadQRCode(String uuid, String reqId, String cookie) throws IOException {
+    public byte[] downloadQRCode(String uuid, String reqId) throws IOException {
 
 
         Map<String, String> headers = new HashMap<>();
         headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
 
         headers.put("referer", indexUrl);
-        headers.put("cookie", cookie);
+
         //  OkResult okResult = OkHttp.get("https://open.e.189.cn/api/logbox/oauth2/image.do", params, headers);
 //.addQueryParameter("uuid", uuid).addQueryParameter("REQID", reqId)
         HttpUrl url = HttpUrl.parse(API_URL + "/api/logbox/oauth2/image.do?uuid=" + uuid + "&REQID=" + reqId).newBuilder().build();
 
         Request request = new Request.Builder().url(url).headers(Headers.of(headers)).build();
-        Response response = OkHttp.newCall(request);
+        Response response = OkHttpWithCookie.newCall(request, cookieJar);
         if (response.code() == 200) {
             return response.body().bytes();
         }
@@ -292,7 +250,7 @@ public class TianYiHandler {
     }
 
 
-    private Map<String, Object> checkLoginStatus(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl, String secondCookie) throws Exception {
+    private Map<String, Object> checkLoginStatus(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("appId", "cloud");
         params.put("encryuuid", encryuuid);
@@ -309,7 +267,7 @@ public class TianYiHandler {
         headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36");
         headers.put("referer", indexUrl);
         headers.put("Reqid", reqId);
-        headers.put("cookie", secondCookie);
+
         String body = api("/api/logbox/oauth2/qrcodeLoginState.do", params, headers, 3, "POST");
         //  OkResult okResult = OkHttp.post(API_URL + "/api/logbox/oauth2/qrcodeLoginState.do", params, headers);
         SpiderDebug.log("qrcodeLoginState result------" + body);
@@ -321,7 +279,7 @@ public class TianYiHandler {
             String redirectUrl = obj.get("redirectUrl").getAsString();
 
 
-            fetchUserInfo(redirectUrl, secondCookie);
+            fetchUserInfo(redirectUrl);
 
 
         } else {
@@ -332,22 +290,15 @@ public class TianYiHandler {
         return null;
     }
 
-    private void fetchUserInfo(String redirectUrl, String secondCookie) throws IOException {
+    private void fetchUserInfo(String redirectUrl) throws IOException {
 
 
         Map<String, String> headers = new HashMap<>();
-        headers.put("Cookie", secondCookie);
-        Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, headers);
+
+        Map<String, List<String>> okResult = OkHttpWithCookie.getLocationHeader(redirectUrl, headers, cookieJar);
         SpiderDebug.log("扫码返回数据：" + Json.toJson(okResult));
         if (okResult.containsKey("set-cookie")) {
-            getCookieMap(okResult.get("Set-Cookie"));
-            this.cookie = mapToCookie(cookieMap);
 
-
-            cache.setTianyiUser(User.objectFrom(cookie));
-            ecache.setTianyieUser(User.objectFrom(ecookie));
-            SpiderDebug.log("获取cookie成功：" + cookie);
-            SpiderDebug.log("获取ecookie成功：" + ecookie);
             //停止检验线程，关闭弹窗
             stopService();
         }
@@ -399,7 +350,7 @@ public class TianYiHandler {
         Init.run(this::dismiss);
     }
 
-    public void startService(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl, String secondCookie) {
+    public void startService(String uuid, String encryuuid, String reqId, String lt, String paramId, String returnUrl) {
         SpiderDebug.log("----start  checkLoginStatus  service");
 
         service = Executors.newScheduledThreadPool(1);
@@ -407,7 +358,7 @@ public class TianYiHandler {
         service.scheduleWithFixedDelay(() -> {
             SpiderDebug.log("----checkLoginStatus ing....");
             try {
-                checkLoginStatus(uuid, encryuuid, reqId, lt, paramId, returnUrl, secondCookie);
+                checkLoginStatus(uuid, encryuuid, reqId, lt, paramId, returnUrl);
             } catch (Exception e) {
                 SpiderDebug.log("----checkLoginStatus error" + e.getMessage());
                 throw new RuntimeException(e);
