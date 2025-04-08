@@ -8,6 +8,7 @@ import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.github.catvod.bean.tianyi.Cache;
+import com.github.catvod.bean.tianyi.User;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttpWithCookie;
 import com.github.catvod.net.OkResult;
@@ -34,7 +35,7 @@ public class TianYiHandler {
     public static final String API_URL = "https://open.e.189.cn";
     private ScheduledExecutorService service;
     private AlertDialog dialog;
-    private final Cache cache;
+    private Cache cache = null;
 
     public File getCache() {
         return Path.tv("tianyi");
@@ -56,6 +57,11 @@ public class TianYiHandler {
 
         cache = Cache.objectFrom(Path.read(getCache()));
         cookieJar = new SimpleCookieJar();
+    }
+
+    public void cleanCookie() {
+
+        cache.setTianyiUser(new User(""));
     }
 
     public SimpleCookieJar getCookieJar() {

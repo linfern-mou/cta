@@ -34,7 +34,7 @@ public class Introduce extends Spider {
         String name2 = "本接口不收费，请不要付费，谢谢！";
         list.add(new Vod("https://androidcatvodspider.netlify.app/wechat.png", name2, pic2));
         String pic3 = "https://androidcatvodspider.netlify.app/wechat.png";
-        String name3 = "v3";
+        String name3 = "2025-04-08 13:52";
         list.add(new Vod("https://androidcatvodspider.netlify.app/wechat.png", name3, pic3));
         return Result.string(classes, list);
     }
@@ -54,6 +54,9 @@ public class Introduce extends Spider {
             String pic = "https://androidcatvodspider.netlify.app/wechat.png";
             String name = "点击设置cookie";
             vodList.add(new Vod("天翼cookie", name, pic));
+            String pic1 = "https://androidcatvodspider.netlify.app/wechat.png";
+            String name1 = "清除cookie";
+            vodList.add(new Vod("clean天翼cookie", name1, pic1));
         }
         return Result.get().vod(vodList).string();
     }
@@ -70,6 +73,11 @@ public class Introduce extends Spider {
         if (vodId.equals("天翼cookie")) {
             TianYiHandler qrCodeHandler = new TianYiHandler();
             qrCodeHandler.startScan();
+        }
+
+        if (vodId.equals("clean天翼cookie")) {
+            TianYiHandler qrCodeHandler = new TianYiHandler();
+            qrCodeHandler.cleanCookie();
         }
         Vod item = new Vod();
         item.setVodId(vodId);
