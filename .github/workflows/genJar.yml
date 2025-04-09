@@ -1,4 +1,4 @@
-name: Spider Jar Gen CI
+ name: Spider Jar Gen CI
 
 on: workflow_dispatch
 
