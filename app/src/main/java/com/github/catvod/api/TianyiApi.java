@@ -233,7 +233,7 @@ public class TianyiApi {
     private String getUserBriefInfo() throws Exception {
         OkResult result = OkHttpWithCookie.get("https://cloud.189.cn/api/portal/v2/getUserBriefInfo.action", new HashMap<>(), getHeaders(), cookieJar);
         JsonObject obj = Json.safeObject(result.getBody());
-        return obj.get("sessionKey").getAsString();
+        return obj.get("sessionKey")==null?"":obj.get("sessionKey").getAsString();
     }
 
     private String getUserSizeInfo() throws Exception {

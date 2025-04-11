@@ -22,6 +22,7 @@ public class Cloud extends Spider {
     private Ali ali = null;
     private UC uc = null;
     private TianYi tianYi = null;
+    private YiDongYun yiDongYun = null;
 
     @Override
     public void init(Context context, String extend) throws Exception {
@@ -30,11 +31,13 @@ public class Cloud extends Spider {
         uc = new UC();
         ali = new Ali();
         tianYi = new TianYi();
-        if(Objects.nonNull(ext)){
+        yiDongYun = new YiDongYun();
+        if (Objects.nonNull(ext)) {
             quark.init(context, ext.has("cookie") ? ext.get("cookie").getAsString() : "");
             uc.init(context, ext.has("uccookie") ? ext.get("uccookie").getAsString() : "");
             ali.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
             tianYi.init(context, ext.has("tianyicookie") ? ext.get("tianyicookie").getAsString() : "");
+            yiDongYun.init(context, "");
         }
 
     }
@@ -49,6 +52,8 @@ public class Cloud extends Spider {
             return uc.detailContent(shareUrl);
         } else if (shareUrl.get(0).startsWith(TianyiApi.URL_START)) {
             return tianYi.detailContent(shareUrl);
+        } else if (shareUrl.get(0).contains(YiDongYun.URL_START)) {
+            return yiDongYun.detailContent(shareUrl);
         }
         return null;
     }
@@ -61,6 +66,8 @@ public class Cloud extends Spider {
             return uc.playerContent(flag, id, vipFlags);
         } else if (flag.contains("天意")) {
             return tianYi.playerContent(flag, id, vipFlags);
+        } else if (flag.contains("移动")) {
+            return yiDongYun.playerContent(flag, id, vipFlags);
         } else {
             return ali.playerContent(flag, id, vipFlags);
         }
@@ -79,6 +86,8 @@ public class Cloud extends Spider {
                 from.add(ali.detailContentVodPlayFrom(List.of(shareLink), i));
             } else if (shareLink.startsWith(URL_START)) {
                 from.add(tianYi.detailContentVodPlayFrom(List.of(shareLink), i));
+            } else if (shareLink.contains(YiDongYun.URL_START)) {
+                from.add(yiDongYun.detailContentVodPlayFrom(List.of(shareLink), i));
             }
         }
 
@@ -96,6 +105,8 @@ public class Cloud extends Spider {
                 urls.add(ali.detailContentVodPlayUrl(List.of(shareLink)));
             } else if (shareLink.startsWith(URL_START)) {
                 urls.add(tianYi.detailContentVodPlayUrl(List.of(shareLink)));
+            } else if (shareLink.contains(YiDongYun.URL_START)) {
+                urls.add(yiDongYun.detailContentVodPlayUrl(List.of(shareLink)));
             }
         }
         return TextUtils.join("$$$", urls);
