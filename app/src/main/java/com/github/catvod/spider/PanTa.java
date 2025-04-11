@@ -16,6 +16,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,8 +59,8 @@ public class PanTa extends Cloud {
         List<Vod> list = new ArrayList<>();
         Elements elements = doc.select(".topicList > .topicItem");
         for (Element e : elements) {
-            String pic = e.selectFirst("a.avatarLink img").attr("src");
-            pic = StringUtils.isAllBlank(pic) ? e.selectFirst(".tm-m-photos-thumb li").attr("data-src") : pic;
+            String pic = Objects.isNull(e.selectFirst(".tm-m-photos-thumb li")) ? "" : e.selectFirst(".tm-m-photos-thumb li").attr("data-src");
+            pic = StringUtils.isAllBlank(pic) ? e.selectFirst("a.avatarLink img").attr("src") : pic;
             Element content = e.selectFirst(".content > h2 > a");
             String vodId = content.attr("href");
             String vodPic = HOST + pic;

@@ -56,7 +56,7 @@ public class PanTaTest {
 
     @org.junit.Test
     public void categoryContent() throws Exception {
-        String content = spider.categoryContent("?tagId=39765285016165", "2", true, null);
+        String content = spider.categoryContent("?tagId=39955372461067", "2", true, null);
         JsonObject map = Json.safeObject(content);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         System.out.println("categoryContent--" + gson.toJson(map));
