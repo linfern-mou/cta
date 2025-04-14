@@ -139,6 +139,15 @@
       "ext": {}
     },
     {
+      "key": "BiXin",
+      "name": "彼心|Pan",
+      "type": 3,
+      "api": "csp_BiXin",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    },
+    {
       "key": "KuaKeBa",
       "name": "夸克吧",
       "type": 3,
