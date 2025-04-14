@@ -32,13 +32,12 @@ public class Cloud extends Spider {
         ali = new Ali();
         tianYi = new TianYi();
         yiDongYun = new YiDongYun();
-        if (Objects.nonNull(ext)) {
-            quark.init(context, ext.has("cookie") ? ext.get("cookie").getAsString() : "");
-            uc.init(context, ext.has("uccookie") ? ext.get("uccookie").getAsString() : "");
-            ali.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
-            tianYi.init(context, ext.has("tianyicookie") ? ext.get("tianyicookie").getAsString() : "");
-            yiDongYun.init(context, "");
-        }
+        boolean first = Objects.nonNull(ext);
+        quark.init(context, first && ext.has("cookie") ? ext.get("cookie").getAsString() : "");
+        uc.init(context, first && ext.has("uccookie") ? ext.get("uccookie").getAsString() : "");
+        ali.init(context, first && ext.has("token") ? ext.get("token").getAsString() : "");
+        tianYi.init(context, first && ext.has("tianyicookie") ? ext.get("tianyicookie").getAsString() : "");
+        yiDongYun.init(context, "");
 
     }
 
