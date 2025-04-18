@@ -35,7 +35,7 @@ public class TgSearch extends Cloud {
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
 
-        String url = URL + "?channelUsername=dianyingshare,XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare&keyword=" + URLEncoder.encode(key, Charset.defaultCharset().name());
+        String url = URL + "?channelUsername=XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,dianyingshare&keyword=" + URLEncoder.encode(key, Charset.defaultCharset().name());
         List<Vod> list = new ArrayList<>();
         String html = OkHttp.string(url, getHeader());
         String[] arr = html.split(":I");
@@ -43,8 +43,8 @@ public class TgSearch extends Cloud {
             for (String s : arr) {
                 Document doc = Jsoup.parse(Util.findByRegex("链接(.*)", s, 1));
                 String id = doc.select(" a").attr("href");
-                String name = Util.findByRegex("名称(.*)描述", s, 1);
-                String desc =  Util.findByRegex("描述(.*) 链接", s, 1);
+                String name = Util.findByRegex("名称(.*)描述", s, 1).replace("：","").replace(":","");
+                String desc =  Util.findByRegex("描述(.*) 链接", s, 1).replace("：","").replace(":","");
 
                 list.add(new Vod(id, name, "", desc));
             }
