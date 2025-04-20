@@ -6,14 +6,13 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.tianyi.Item;
 import com.github.catvod.bean.tianyi.ShareData;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttpWithCookie;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
 import com.github.catvod.utils.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import okhttp3.Cookie;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -53,7 +52,7 @@ public class TianyiApi {
             JsonObject obj = Json.safeObject(token);
             //初始化CookieJar
             if (Objects.nonNull(obj)) {
-                tianYiHandler.setCookie(obj);
+                //TODO tianYiHandler.setCookie(obj);
             }
         }
         if (cookieJar.getCookieStore().size() == 0) {
@@ -145,9 +144,9 @@ public class TianyiApi {
         header.remove("Content-Type");
         List<String> cookies = new ArrayList<>();
         for (String s : tianYiHandler.getCookieJar().getCookieStore().keySet()) {
-            for (Cookie cookie : tianYiHandler.getCookieJar().getCookieStore().get(s)) {
+           /*TODO for (Cookie cookie : tianYiHandler.getCookieJar().getCookieStore().get(s)) {
                 cookies.add(cookie.name() + "=" + cookie.value());
-            }
+            }*/
         }
         header.put("Cookie", TextUtils.join(";", cookies));
         return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
@@ -170,9 +169,9 @@ public class TianyiApi {
 
         OkResult okResult;
         if ("GET".equals(method)) {
-            okResult = OkHttpWithCookie.get(this.apiUrl + url, params, getHeaders(), cookieJar);
+            okResult = OkHttp.get(this.apiUrl + url, params, getHeaders());
         } else {
-            okResult = OkHttpWithCookie.post(this.apiUrl + url, Json.toJson(data), getHeaders(), cookieJar);
+            okResult = OkHttp.post(this.apiUrl + url, Json.toJson(data), getHeaders());
         }
        /* if (okResult.getResp().get("Set-Cookie") != null) {
             Matcher matcher = Pattern.compile("__puus=([^;]+)").matcher(StringUtils.join(okResult.getResp().get("Set-Cookie"), ";;;"));
@@ -235,13 +234,13 @@ public class TianyiApi {
 
 
     private String getUserBriefInfo() throws Exception {
-        OkResult result = OkHttpWithCookie.get("https://cloud.189.cn/api/portal/v2/getUserBriefInfo.action", new HashMap<>(), getHeaders(), cookieJar);
+        OkResult result = OkHttp.get("https://cloud.189.cn/api/portal/v2/getUserBriefInfo.action", new HashMap<>(), getHeaders());
         JsonObject obj = Json.safeObject(result.getBody());
         return obj.get("sessionKey") == null ? "" : obj.get("sessionKey").getAsString();
     }
 
     private String getUserSizeInfo() throws Exception {
-        OkResult result = OkHttpWithCookie.get("https://cloud.189.cn/api/portal/getUserSizeInfo.action", new HashMap<>(), getHeaders(), cookieJar);
+        OkResult result = OkHttp.get("https://cloud.189.cn/api/portal/getUserSizeInfo.action", new HashMap<>(), getHeaders());
         JsonObject res = Json.safeObject(result.getBody());
         if (StringUtils.isAllBlank(result.getBody()) || (Objects.nonNull(res.get("errorCode")) && res.get("errorCode").getAsString().equals("InvalidSessionKey"))) {
             // tianYiHandler.startScan();
@@ -373,7 +372,7 @@ public class TianyiApi {
     private String getDownload(String shareId, String fileId) throws Exception {
         Map<String, String> headers = getHeaders();
         //headers.remove("sessionKey");
-        OkResult result = OkHttpWithCookie.get("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action?shareId=" + shareId + "&dt=1&fileId=" + fileId + "&type=4&key=noCache", new HashMap<>(), headers, cookieJar);
+        OkResult result = OkHttp.get("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action?shareId=" + shareId + "&dt=1&fileId=" + fileId + "&type=4&key=noCache", new HashMap<>(), headers);
         JsonObject res = Json.safeObject(result.getBody());
         if (Objects.nonNull(res.get("res_code")) && res.get("res_code").getAsInt() == 0) {
 
