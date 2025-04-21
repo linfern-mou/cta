@@ -8,7 +8,7 @@ import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Path;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import okhttp3.HttpUrl;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import okhttp3.HttpUrl;
 
 public class SimpleCookieJar {
     private Map<String, Map<String, String>> cookieStore = new HashMap<>();
@@ -46,7 +48,8 @@ public class SimpleCookieJar {
 
     public void saveFromResponse(String url, List<String> cookies) {
         HttpUrl httpUrl = HttpUrl.parse(url);
-        SpiderDebug.log("SimpleCookieJar saveFromResponse: " + httpUrl.host() + ": " + Json.toJson(cookies));
+        SpiderDebug.log(" saveFromResponse url: " + url);
+        SpiderDebug.log(" saveFromResponse cookie : " + Json.toJson(cookies));
         // 创建可修改的 Cookie 列表副本
         Map<String, String> oldCookies = cookieStore.get(httpUrl.host()) != null ? cookieStore.get(httpUrl.host()) : new HashMap<>();
 
@@ -65,7 +68,7 @@ public class SimpleCookieJar {
 
         cookieStore.put(httpUrl.host(), oldCookies);
         cache.setTianyiUser(User.objectFrom(Json.toJson(cookieStore)));
-        SpiderDebug.log("SimpleCookieJar cookieStore: " + Json.toJson(cookieStore));
+        SpiderDebug.log(" cookieStore now: " + Json.toJson(cookieStore));
 
     }
 
@@ -102,7 +105,8 @@ public class SimpleCookieJar {
             }
         }
         String cookie = StringUtils.join(cookieList, ";");
-        SpiderDebug.log("SimpleCookieJar getCookie: url:" + httpUrl.host() + "cookie:" + cookie);
+        SpiderDebug.log(" loadForRequest url:" + url);
+        SpiderDebug.log(" loadForRequest cookie:" + cookie);
         return cookie;
     }
 }

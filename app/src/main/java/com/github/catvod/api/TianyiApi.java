@@ -384,7 +384,7 @@ public class TianyiApi {
             }
         } else if (res.get("errorCode") != null && res.get("errorCode").getAsString().equals("InvalidSessionKey")) {
             //刷新cookie
-            SpiderDebug.log("cookie 过期，刷新cookie。。。。");
+            SpiderDebug.log("天意cookie 过期，刷新cookie。。。。");
             tianYiHandler.refreshCookie();
             //重试下载
             SpiderDebug.log("重试下载。。。。");

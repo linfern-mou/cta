@@ -7,28 +7,40 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+
 import com.github.catvod.bean.tianyi.Cache;
 import com.github.catvod.bean.tianyi.User;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
-import com.github.catvod.utils.*;
+import com.github.catvod.utils.Json;
+import com.github.catvod.utils.Notify;
+import com.github.catvod.utils.Path;
+import com.github.catvod.utils.QRCode;
+import com.github.catvod.utils.ResUtil;
 import com.google.gson.JsonObject;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.Request;
-import okhttp3.Response;
+
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class TianYiHandler {
 
@@ -77,18 +89,18 @@ public class TianYiHandler {
 
     public void refreshCookie() throws IOException {
 
-
         String url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fweb%2Fredirect.html&defaultSaveName=3&defaultSaveNameCheck=uncheck&browserId=16322f24d9405fb83331c3f6ce971b53";
         String index = OkHttp.getLocation(url, getHeader(url));
-        SpiderDebug.log("index：" + index);
-        SpiderDebug.log("index red: " + index);
+        SpiderDebug.log("unifyAccountLogin：" + index);
+
         Map<String, List<String>> resHeaderMap = OkHttp.getLocationHeader(index, getHeader(index));
         saveCookie(resHeaderMap.get("Set-Cookie"), index);
         indexUrl = resHeaderMap.get("Location").get(0);
-        SpiderDebug.log("indexUrl red: " + indexUrl);
-        OkResult okResult = OkHttp.get(indexUrl, new HashMap<>(), getHeader(indexUrl));
-        saveCookie(okResult.getResp().get("Set-Cookie"), indexUrl);
-        SpiderDebug.log("refreshCookie header：" + Json.toJson(okResult.getResp()));
+        SpiderDebug.log("callbackUnify: " + indexUrl);
+
+        Map<String, List<String>> callbackUnify = OkHttp.getLocationHeader(indexUrl, getHeader(indexUrl));
+        saveCookie(callbackUnify.get("Set-Cookie"), indexUrl);
+        SpiderDebug.log("refreshCookie header：" + Json.toJson(callbackUnify));
 
     }
 
