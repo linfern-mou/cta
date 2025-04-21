@@ -52,7 +52,7 @@ public class TianyiApi {
             JsonObject obj = Json.safeObject(token);
             //初始化CookieJar
             if (Objects.nonNull(obj)) {
-                //TODO tianYiHandler.setCookie(obj);
+                 tianYiHandler.setCookie(obj);
             }
         }
         if (cookieJar.getCookieStore().size() == 0) {
@@ -69,6 +69,7 @@ public class TianyiApi {
 
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         headers.put("accept", "application/json;charset=UTF-8");
+        headers.put("cookie",  cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
 
         if (StringUtils.isNotBlank(sessionKey)) {
             headers.put("sessionKey", sessionKey);
@@ -142,13 +143,9 @@ public class TianyiApi {
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
-        List<String> cookies = new ArrayList<>();
-        for (String s : tianYiHandler.getCookieJar().getCookieStore().keySet()) {
-           /*TODO for (Cookie cookie : tianYiHandler.getCookieJar().getCookieStore().get(s)) {
-                cookies.add(cookie.name() + "=" + cookie.value());
-            }*/
-        }
-        header.put("Cookie", TextUtils.join(";", cookies));
+
+
+        header.put("Cookie",  cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
         return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
