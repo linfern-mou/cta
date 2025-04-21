@@ -9,9 +9,7 @@ import com.github.catvod.utils.Path;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import okhttp3.Cookie;
-import okhttp3.CookieJar;
-import okhttp3.HttpUrl;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,6 +18,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import okhttp3.Cookie;
+import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
 
 public class SimpleCookieJar implements CookieJar {
     private Map<String, List<Cookie>> cookieStore = new HashMap<>();
@@ -49,7 +51,8 @@ public class SimpleCookieJar implements CookieJar {
 
     @Override
     public void saveFromResponse(HttpUrl url, @NotNull List<Cookie> cookies) {
-        SpiderDebug.log("SimpleCookieJar saveFromResponse: " + url.host() + ": " + Json.toJson(cookies));
+        SpiderDebug.log(" ====saveFromResponse url: " + url.host() + ": " + Json.toJson(cookies));
+        SpiderDebug.log(" ====saveFromResponse cookie: " + Json.toJson(cookies));
         // 创建可修改的 Cookie 列表副本
         List<Cookie> oldCookies = cookieStore.get(url.host()) != null ? cookieStore.get(url.host()) : new ArrayList<>();
         List<Cookie> newCookies = new ArrayList<>(oldCookies);
@@ -67,7 +70,7 @@ public class SimpleCookieJar implements CookieJar {
 
         cookieStore.put(url.host(), oldCookies);
         cache.setTianyiUser(User.objectFrom(Json.toJson(cookieStore)));
-        SpiderDebug.log("SimpleCookieJar cookieStore: " + Json.toJson(cookieStore));
+        SpiderDebug.log(" cookieStore now : " + Json.toJson(cookieStore));
 
     }
 
@@ -76,7 +79,8 @@ public class SimpleCookieJar implements CookieJar {
 
 
         var cookies = cookieStore.get(url.host());
-        SpiderDebug.log(" SimpleCookieJar loadForRequest: " + url.host() + ": " + Json.toJson(cookies));
+        SpiderDebug.log("  ===loadForRequest url : " + url);
+        SpiderDebug.log("  ===loadForRequest cookie: " + Json.toJson(cookies));
         return cookies != null ? cookies : new ArrayList<>();
     }
 
