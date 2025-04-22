@@ -1,6 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+
 import com.github.catvod.api.TianYiHandler;
 import com.github.catvod.api.UCTokenHandler;
 import com.github.catvod.bean.Class;
@@ -58,7 +59,7 @@ public class Introduce extends Spider {
             String name1 = "清除cookie";
             vodList.add(new Vod("clean天翼cookie", name1, pic1));
         }
-        return Result.get().vod(vodList).string();
+        return Result.get().vod(vodList).page().string();
     }
 
     @Override

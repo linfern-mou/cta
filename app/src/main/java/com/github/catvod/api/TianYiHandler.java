@@ -309,7 +309,7 @@ public class TianYiHandler {
         Map<String, List<String>> okResult = OkHttp.getLocationHeader(redirectUrl, getHeader(redirectUrl));
         saveCookie(okResult.get("Set-Cookie"), redirectUrl);
         SpiderDebug.log("扫码返回数据：" + Json.toJson(okResult));
-        if (okResult.containsKey("set-cookie")) {
+        if (okResult.containsKey("Set-Cookie")) {
 
             //停止检验线程，关闭弹窗
             stopService();

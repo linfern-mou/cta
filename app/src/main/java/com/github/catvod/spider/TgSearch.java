@@ -35,7 +35,7 @@ public class TgSearch extends Cloud {
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
 
-        String url = URL + "?channelUsername=XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,dianyingshare&keyword=" + URLEncoder.encode(key, Charset.defaultCharset().name());
+        String url = URL + "?channelUsername=tianyirigeng,tyypzhpd,XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,dianyingshare&keyword=" + URLEncoder.encode(key, Charset.defaultCharset().name());
         List<Vod> list = new ArrayList<>();
         String html = OkHttp.string(url, getHeader());
         String[] arr = html.split(":I");
