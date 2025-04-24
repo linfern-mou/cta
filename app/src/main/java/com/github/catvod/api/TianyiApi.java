@@ -52,15 +52,42 @@ public class TianyiApi {
             JsonObject obj = Json.safeObject(token);
             //初始化CookieJar
             if (Objects.nonNull(obj)) {
-                 tianYiHandler.setCookie(obj);
+                tianYiHandler.setCookie(obj);
             }
         }
-        if (cookieJar.getCookieStore().size() == 0) {
-            SpiderDebug.log("CookieJar为空");
+        if (!isCookieValid()) {
+            SpiderDebug.log("CookieJar不合法，请重新登录");
             tianYiHandler.startScan();
         }
         getUserSizeInfo();
         this.sessionKey = getUserBriefInfo();
+    }
+
+    /**
+     * 判断cookie是否为空，或者SSon为空，那就需要重新登陆
+     *
+     * @return
+     */
+    private boolean isCookieValid() {
+        if (cookieJar.getCookieStore().size() == 0) {
+            SpiderDebug.log("CookieJar为空");
+            return false;
+        } else {
+            for (String key : cookieJar.getCookieStore().keySet()) {
+                Map<String, String> cookieMap = cookieJar.getCookieStore().get(key);
+                for (String k : cookieMap.keySet()) {
+                    String cookieobj = cookieMap.get(k);
+                    if (k.equals("SSON") && StringUtils.isNoneBlank(cookieobj)) {
+                        SpiderDebug.log("SSON 不为空");
+                        return true;
+                    }
+
+                }
+
+            }
+        }
+        SpiderDebug.log("CookieJar 不合法，重新登录");
+        return false;
     }
 
     private Map<String, String> getHeaders() {
@@ -69,7 +96,7 @@ public class TianyiApi {
 
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         headers.put("accept", "application/json;charset=UTF-8");
-        headers.put("cookie",  cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
+        headers.put("cookie", cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
 
         if (StringUtils.isNotBlank(sessionKey)) {
             headers.put("sessionKey", sessionKey);
@@ -145,7 +172,7 @@ public class TianyiApi {
         header.remove("Content-Type");
 
 
-        header.put("Cookie",  cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
+        header.put("Cookie", cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
         return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
