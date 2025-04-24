@@ -8,7 +8,7 @@ import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Path;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import okhttp3.HttpUrl;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import okhttp3.HttpUrl;
 
 public class SimpleCookieJar {
     private Map<String, Map<String, String>> cookieStore = new HashMap<>();
@@ -61,7 +59,12 @@ public class SimpleCookieJar {
             if (equalsIndex > 0) {
                 String key = cookieItem.substring(0, equalsIndex);
                 String value = equalsIndex < cookieItem.length() - 1 ? cookieItem.substring(equalsIndex + 1) : "";
-                oldCookies.put(key, value);
+                if (value.equals("SSON") && StringUtils.isAllBlank(value)) {
+
+                } else {
+                    oldCookies.put(key, value);
+                }
+
             }
         }
 
