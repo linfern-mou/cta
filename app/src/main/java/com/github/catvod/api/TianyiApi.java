@@ -57,7 +57,7 @@ public class TianyiApi {
         }
         if (!isCookieValid()) {
             SpiderDebug.log("CookieJar不合法，请重新登录");
-            tianYiHandler.startScan();
+           // tianYiHandler.startScan();
         }
         getUserSizeInfo();
         this.sessionKey = getUserBriefInfo();

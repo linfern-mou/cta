@@ -85,7 +85,7 @@ public class YunDrive {
         String cacheKey = linkID + "-" + pCaID;
         if (cache.containsKey(cacheKey)) return cache.get(cacheKey);
 
-        Map<String, Object> requestBody = Map.of("getOutLinkInfoReq", Map.of("account", "", "linkID", linkID, "passwd", "", "caSrt", 0, "coSrt", 0, "srtDr", 1, "bNum", 1, "pCaID", pCaID, "eNum", 200), "commonAccountInfo", Map.of("account", "", "accountType", 1));
+        Map<String, Object> requestBody = Map.of("getOutLinkInfoReq", Map.of("account", "", "linkID", linkID, "passwd", "", "caSrt", 1, "coSrt", 1, "srtDr", 0, "bNum", 1, "pCaID", pCaID, "eNum", 200), "commonAccountInfo", Map.of("account", "", "accountType", 1));
 
 
         OkResult okResult = OkHttp.post(baseUrl + "getOutLinkInfoV6", encrypt(Json.toJson(requestBody)), baseHeaders);
