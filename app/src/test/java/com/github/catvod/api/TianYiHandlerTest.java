@@ -78,4 +78,10 @@ public class TianYiHandlerTest {
     }
 
 
+    @Test
+    public void loginWithPassword() throws Exception {
+         tianYiHandler.loginWithPassword("18896781601","Lushunming@0526");
+        System.out.println("1111");
+    }
+
 }
