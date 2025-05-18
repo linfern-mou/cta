@@ -5,11 +5,13 @@ import com.github.catvod.net.OkResult;
 import com.github.catvod.utils.Json;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
@@ -183,7 +185,17 @@ public class YunDrive {
 
 
         OkResult okResult = OkHttp.post(baseUrl + "getContentInfoFromOutLink", Json.toJson(requestBody), Map.of("Accept-Encoding", "gzip, deflate, br, zstd", "User-Agent", baseHeaders.get("User-Agent")));
-        return Json.safeObject(okResult.getBody()).getAsJsonObject("data").getAsJsonObject("contentInfo").get("presentURL").getAsString();
+        String m3u8 = Json.safeObject(okResult.getBody()).getAsJsonObject("data").getAsJsonObject("contentInfo").get("presentURL").getAsString();
+
+        String m3u8Str = OkHttp.string(m3u8);
+        String resultUrl = m3u8;
+        for (String s : m3u8Str.split("\n")) {
+            if (s.contains("index.m3u8")) {
+                resultUrl = s;
+                break;
+            }
+        }
+        return m3u8.split("playlist.m3u8")[0]+resultUrl;
     }
 
 
