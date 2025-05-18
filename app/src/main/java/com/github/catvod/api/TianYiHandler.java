@@ -543,11 +543,11 @@ public class TianYiHandler {
     private void showInput() {
         try {
             int margin = ResUtil.dp2px(16);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             LinearLayout frame = new LinearLayout(Init.context());
             frame.setOrientation(LinearLayout.VERTICAL);
-
-            params.setMargins(margin, margin, margin, margin);
+            frame.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            // params.setMargins(margin, margin, margin, margin);
             EditText username = new EditText(Init.context());
             username.setHint("请输入天翼用户名");
             EditText password = new EditText(Init.context());
