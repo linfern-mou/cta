@@ -202,6 +202,12 @@ public class TianYiHandler {
             // Step 7: 处理登录结果
             processLoginResult(loginResult);
 
+            //保存的账号密码
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("username", uname);
+            jsonObject.addProperty("password", passwd);
+            cache.setTianyiUser(new User(Json.toJson(jsonObject)));
+
         } catch (Exception e) {
             SpiderDebug.log("登录失败: " + e.getMessage());
             Notify.show("天翼登录失败: " + e.getMessage());
@@ -546,7 +552,7 @@ public class TianYiHandler {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             LinearLayout frame = new LinearLayout(Init.context());
             frame.setOrientation(LinearLayout.VERTICAL);
-            frame.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            // frame.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             // params.setMargins(margin, margin, margin, margin);
             EditText username = new EditText(Init.context());
             username.setHint("请输入天翼用户名");
@@ -564,10 +570,7 @@ public class TianYiHandler {
         dismiss();
         Init.execute(() -> {
             loginWithPassword(username, password);
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("username", username);
-            jsonObject.addProperty("password", password);
-            cache.setTianyiUser(new User(Json.toJson(jsonObject)));
+
 
         });
     }
