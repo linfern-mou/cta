@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.github.catvod.bean.tianyi.Cache;
 import com.github.catvod.bean.tianyi.User;
@@ -542,11 +543,13 @@ public class TianYiHandler {
     private void showInput() {
         try {
             int margin = ResUtil.dp2px(16);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            FrameLayout frame = new FrameLayout(Init.context());
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout frame = new LinearLayout(Init.context());
             params.setMargins(margin, margin, margin, margin);
             EditText username = new EditText(Init.context());
+            username.setHint("请输入天翼用户名");
             EditText password = new EditText(Init.context());
+            password.setHint("请输入天翼密码");
             frame.addView(username, params);
             frame.addView(password, params);
             dialog = new AlertDialog.Builder(Init.getActivity()).setTitle("请输入天意用户名和密码").setView(frame).setNegativeButton(android.R.string.cancel, null).setPositiveButton(android.R.string.ok, (dialog, which) -> onPositive(username.getText().toString(), password.getText().toString())).show();
