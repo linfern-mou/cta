@@ -81,21 +81,37 @@ public class TianYiHandler {
         return cookieJar;
     }
 
-    public TianYiHandler() {
+    private static class Loader {
+        static volatile TianYiHandler INSTANCE = new TianYiHandler();
+    }
+
+    public static TianYiHandler get() {
+        return TianYiHandler.Loader.INSTANCE;
+    }
+
+    private TianYiHandler() {
 
         cookieJar = new SimpleCookieJar();
         cache = Cache.objectFrom(Path.read(getCache()));
+    }
+
+    /**
+     * 初始化
+     */
+    public void init() {
         String user = cache.getUser().getCookie();
         if (StringUtils.isNoneBlank(user)) {
             JsonObject jsonObject = Json.safeObject(user);
             String username = jsonObject.get("username").getAsString();
             String password = jsonObject.get("password").getAsString();
+            if (StringUtils.isBlank(username) || StringUtils.isBlank(password)) {
+                this.startFlow();
+                return;
+            }
             this.loginWithPassword(username, password);
         } else {
             this.startFlow();
         }
-
-
     }
 
     public void cleanCookie() {

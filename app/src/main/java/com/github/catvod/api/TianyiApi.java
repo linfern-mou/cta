@@ -109,7 +109,8 @@ public class TianyiApi {
     private TianyiApi() {
         Init.checkPermission();
 
-        tianYiHandler = new TianYiHandler();
+        tianYiHandler =  TianYiHandler.get();
+        tianYiHandler.init();
         cookieJar = tianYiHandler.getCookieJar();
     }
 

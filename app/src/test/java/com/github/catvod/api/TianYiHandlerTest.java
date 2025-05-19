@@ -18,7 +18,7 @@ public class TianYiHandlerTest {
 
     @Before
     public void setUp() {
-        tianYiHandler = new TianYiHandler();
+        tianYiHandler =  TianYiHandler.get();
 
     }
 
