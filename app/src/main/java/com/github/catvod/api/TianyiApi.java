@@ -53,6 +53,7 @@ public class TianyiApi {
             //初始化CookieJar
             if (Objects.nonNull(obj)) {
                 tianYiHandler.setCookie(obj);
+                tianYiHandler.loginWithPassword(obj.get("username").getAsString(), obj.get("password").getAsString());
             }
         }
         if (!isCookieValid()) {

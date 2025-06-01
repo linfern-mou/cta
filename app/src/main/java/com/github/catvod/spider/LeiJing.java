@@ -107,10 +107,10 @@ public class LeiJing extends Cloud {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
 
-        Document doc = Jsoup.parse(OkHttp.string(String.format("%s?tagId=%s&page=%s", siteUrl, tid, pg), getHeader()));
+        Document doc = Jsoup.parse(OkHttp.string(String.format("%s%s&page=%s", siteUrl, tid, pg), getHeader()));
         List<Vod> list = parseVodListFromDoc(doc);
-        int total = (Integer.parseInt(pg) + 1) * 19;
-        return Result.get().vod(list).page(Integer.parseInt(pg), Integer.parseInt(pg) + 1, 19, total).string();
+        int total = (Integer.parseInt(pg) + 1) * 30;
+        return Result.get().vod(list).page(Integer.parseInt(pg), Integer.parseInt(pg) + 1, 30, total).string();
     }
 
 
