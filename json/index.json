@@ -77,6 +77,15 @@
       "ext": {}
     },
     {
+      "key": "LeiJing",
+      "name": "雷鲸|189Pan",
+      "type": 3,
+      "api": "csp_LeiJing",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    },
+    {
       "key": "BiXin",
       "name": "彼心|139Pan",
       "type": 3,
