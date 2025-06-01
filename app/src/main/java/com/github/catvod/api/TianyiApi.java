@@ -337,7 +337,7 @@ public class TianyiApi {
 
         for (JsonElement item : items) {
             if (item.getAsJsonObject().get("mediaType").getAsInt() == 3) {
-                if (item.getAsJsonObject().get("size").getAsInt() < 1024 * 1024 * 5) continue;
+                if (item.getAsJsonObject().get("size").getAsLong() < 1024 * 1024 * 5) continue;
 
                 videos.add(Item.objectFrom(item.getAsJsonObject(), shareData.getShareId(), shareIndex));
             } /*else if ("file".equals(item.get("type")) && this.subtitleExts.contains("." + Util.getExt((String) item.get("file_name")))) {
