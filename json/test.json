@@ -1,5 +1,5 @@
 {
-  "spider": "https://ghproxy.net/https://raw.githubusercontent.com/lushunming/AndroidCatVodSpider/multiThread/jar/custom_spider.jar;md5;0533c52ab045f5edaaef522267c08568",
+  "spider": "https://ghproxy.net/https://raw.githubusercontent.com/lushunming/AndroidCatVodSpider/multiThread/jar/custom_spider.jar;md5;c2f5d58d6de2397d7e8955a449b38835",
   "lives": [
     {
       "name": "电视直播",

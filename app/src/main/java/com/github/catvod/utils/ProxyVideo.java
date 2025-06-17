@@ -150,7 +150,7 @@ public class ProxyVideo {
         SpiderDebug.log("parseRange:" + range);
         if (StringUtils.isNoneBlank(range)) {
 
-            String[] ranges = range.replace("bytes=", "").split("-");
+            String[] ranges = StringUtils.split(range.replace("bytes=", ""), "-");
             String start = ranges[0];
             String end = ranges.length > 1 ? ranges[1] : "";
             return new Range(start, end);
