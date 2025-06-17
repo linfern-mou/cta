@@ -150,7 +150,7 @@ public class ProxyVideo {
         if (StringUtils.isNoneBlank(range)) {
             String[] ranges = range.replace("bytes=", "").split("-");
             String start = ranges[0];
-            String end = ranges[1];
+            String end = ranges.length == 2 ? ranges[1] : "";
             return new Range(start, end);
         }
         return null;
