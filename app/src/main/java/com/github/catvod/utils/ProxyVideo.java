@@ -79,7 +79,7 @@ public class ProxyVideo {
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) throws Exception {
 
-        String range = headers.get("Range");
+        String range = headers.get("range");
         SpiderDebug.log("---proxyMultiThread,Range:" + range);
         Range rangeObj = parseRange(range);
         //没有range,无需分割
