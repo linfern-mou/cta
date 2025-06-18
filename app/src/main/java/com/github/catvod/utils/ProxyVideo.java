@@ -79,6 +79,7 @@ public class ProxyVideo {
 
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) throws Exception {
+        SpiderDebug.log("--proxyMultiThread: start ");
         Map<String, String> newHeaders = new HashMap<>(headers);
         newHeaders.put("range", "bytes=0-0");
         Object[] info = proxy(url, newHeaders);
@@ -87,8 +88,10 @@ public class ProxyVideo {
             return proxy(url, headers);
         }
         String contentRange = ((Map<String, String>) info[3]).get("Content-Range");
+        SpiderDebug.log("--contentRange:" + contentRange);
         //文件总大小
         String total = StringUtils.split(contentRange, "/")[1];
+        SpiderDebug.log("--文件总大小:" + total);
 
 
         String range = headers.get("range");
