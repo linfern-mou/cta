@@ -82,19 +82,20 @@ public class ProxyVideo {
         SpiderDebug.log("--proxyMultiThread: start ");
         Map<String, String> newHeaders = new HashMap<>(headers);
         newHeaders.put("range", "bytes=0-0");
+        newHeaders.put("Range", "bytes=0-0");
         Object[] info = proxy(url, newHeaders);
         int code = (int) info[0];
         if (code != 206) {
             return proxy(url, headers);
         }
-        String contentRange = ((Map<String, String>) info[3]).get("Content-Range");
+        String contentRange = StringUtils.isAllBlank(((Map<String, String>) info[3]).get("Content-Range")) ? ((Map<String, String>) info[3]).get("content-range") : ((Map<String, String>) info[3]).get("Content-Range");
         SpiderDebug.log("--contentRange:" + contentRange);
         //文件总大小
         String total = StringUtils.split(contentRange, "/")[1];
         SpiderDebug.log("--文件总大小:" + total);
 
 
-        String range = headers.get("range");
+        String range = StringUtils.isAllBlank(headers.get("range")) ? headers.get("Range") : headers.get("range");
         SpiderDebug.log("---proxyMultiThread,Range:" + range);
         Map<String, String> rangeObj = parseRange(range);
         //没有range,无需分割
@@ -115,6 +116,7 @@ public class ProxyVideo {
                 Map<String, String> headerNew = new HashMap<>(headers);
 
                 headerNew.put("range", newRange);
+                headerNew.put("Range", newRange);
                 Future<Response> result = service.submit(() -> {
                     try {
 
@@ -135,6 +137,7 @@ public class ProxyVideo {
                 response = future.get();
                 bytes = ArrayUtils.addAll(bytes, response.body().bytes());
                 SpiderDebug.log("---第" + i + "块下载完成" + ";Content-Range:" + response.headers().get("Content-Range"));
+                SpiderDebug.log("---第" + i + "块下载完成" + ";content-range:" + response.headers().get("content-range"));
 
             }
             service.shutdown();
@@ -150,7 +153,9 @@ public class ProxyVideo {
             }
 
             respHeaders.put("Content-Length", String.valueOf(bytes.length));
+            respHeaders.put("content-length", String.valueOf(bytes.length));
             respHeaders.put("Content-Range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
+            respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
             SpiderDebug.log("++proxy res contentType:" + contentType);
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(respHeaders));
