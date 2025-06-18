@@ -23,7 +23,7 @@ public class ProxyVideo {
 
     private static final String GO_SERVER = "http://127.0.0.1:7777/";
     //线程数4
-    private static final int THREAD_NUM = 4;
+    private static final int THREAD_NUM = 16;
 
 
     public static String buildCommonProxyUrl(String url, Map<String, String> headers) {
@@ -168,7 +168,7 @@ public class ProxyVideo {
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
         long start = Long.parseLong(rangeObj.get("start"));
-        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024  : Long.parseLong(rangeObj.get("end"));
+        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 *8 : Long.parseLong(rangeObj.get("end"));
 
 
         long totalSize = Long.parseLong(total);
