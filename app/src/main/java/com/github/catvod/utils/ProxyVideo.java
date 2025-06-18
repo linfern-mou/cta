@@ -7,6 +7,7 @@ import com.github.catvod.net.OkHttp;
 import com.github.catvod.spider.Proxy;
 import com.google.gson.Gson;
 import okhttp3.Response;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
@@ -78,82 +79,113 @@ public class ProxyVideo {
 
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) throws Exception {
+        Map<String, String> newHeaders = new HashMap<>(headers);
+        newHeaders.put("range", "bytes=0-0");
+        Object[] info = proxy(url, newHeaders);
+        int code = (int) info[0];
+        if (code != 206) {
+            return proxy(url, headers);
+        }
+        String contentRange = ((Map<String, String>) info[3]).get("Content-Range");
+        //文件总大小
+        String total = StringUtils.split(contentRange, "/")[1];
+
 
         String range = headers.get("range");
         SpiderDebug.log("---proxyMultiThread,Range:" + range);
-        Range rangeObj = parseRange(range);
+        Map<String, String> rangeObj = parseRange(range);
         //没有range,无需分割
         if (rangeObj == null) {
             SpiderDebug.log("没有range,无需分割");
             return proxy(url, headers);
         } else {
-            //end 为空，测试请求
-            if (StringUtils.isAllBlank(rangeObj.getEnd())) {
-                return proxy(url, headers);
-            } else {
-                long start = Long.parseLong(rangeObj.getStart());
-                long end = Long.parseLong(rangeObj.getEnd());
+            List<long[]> partList = generatePart(rangeObj, total);
 
-                long size = end - start;
-                //每块大小
-                long partSize = size / THREAD_NUM;
-                ExecutorService service = Executors.newFixedThreadPool(THREAD_NUM);
-// 存储执行结果的List
-                List<Future<Response>> results = new ArrayList<Future<Response>>();
-                for (int i = 0; i < THREAD_NUM; i++) {
-                    long partEnd = start + partSize >= end ? end : start + partSize;
-                    String newRange = "range=" + start + "-" + partEnd;
-                    start = partEnd;
+            ExecutorService service = Executors.newFixedThreadPool(THREAD_NUM);
+            // 存储执行结果的List
+            List<Future<Response>> results = new ArrayList<Future<Response>>();
+            for (long[] part : partList) {
 
-                    headers.put("Range", newRange);
-                    Future<Response> result = service.submit(() -> {
-                        try {
-                            return OkHttp.newCall(url, headers);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    results.add(result);
-                }
-                byte[] bytes = new byte[(int) size];
-                Response response = null;
-                for (int i = 0; i < THREAD_NUM; i++) {
-                    // 获取包含返回结果的future对象
-                    Future<Response> future = results.get(i);
-                    // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
-                    response = future.get();
-                    response.body().byteStream().read(bytes, (int) (i * partSize), (int) partSize);
-                    SpiderDebug.log("---第" + i + "块下载完成" + ";headers:" + Json.toJson(response.headers()));
+                String newRange = "bytes=" + part[0] + "-" + part[1];
+                SpiderDebug.log("下载开始" + ";newRange:" + newRange);
 
-                }
-                String contentType = response.headers().get("Content-Type");
-                String contentDisposition = response.headers().get("Content-Disposition");
-                if (contentDisposition != null) contentType = getMimeType(contentDisposition);
-                Map<String, String> respHeaders = new HashMap<>();
+                Map<String, String> headerNew = new HashMap<>(headers);
+
+                headerNew.put("range", newRange);
+                Future<Response> result = service.submit(() -> {
+                    try {
+
+                        return OkHttp.newCall(url, headerNew);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                results.add(result);
+            }
+            byte[] bytes = null;
+
+            Response response = null;
+            for (int i = 0; i < THREAD_NUM; i++) {
+                // 获取包含返回结果的future对象
+                Future<Response> future = results.get(i);
+                // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
+                response = future.get();
+                bytes = ArrayUtils.addAll(bytes, response.body().bytes());
+                SpiderDebug.log("---第" + i + "块下载完成" + ";Content-Range:" + response.headers().get("Content-Range"));
+
+            }
+            service.shutdown();
+            String contentType = response.headers().get("Content-Type");
+            String contentDisposition = response.headers().get("Content-Disposition");
+            if (contentDisposition != null) contentType = getMimeType(contentDisposition);
+            Map<String, String> respHeaders = new HashMap<>();
            /* respHeaders.put("Access-Control-Allow-Credentials", "true");
             respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
-                for (String key : response.headers().names()) {
-                    respHeaders.put(key, response.headers().get(key));
-                }
-                SpiderDebug.log("++proxy res contentType:" + contentType);
-                //   SpiderDebug.log("++proxy res body:" + response.body());
-                SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(respHeaders));
-                return new Object[]{response.code(), contentType, new ByteArrayInputStream(bytes), respHeaders};
-
+            for (String key : response.headers().names()) {
+                respHeaders.put(key, response.headers().get(key));
             }
+
+            respHeaders.put("Content-Length", String.valueOf(bytes.length));
+            respHeaders.put("Content-Range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
+            SpiderDebug.log("++proxy res contentType:" + contentType);
+            //   SpiderDebug.log("++proxy res body:" + response.body());
+            SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(respHeaders));
+            return new Object[]{response.code(), contentType, new ByteArrayInputStream(bytes), respHeaders};
+
+
         }
 
     }
 
-    private static Range parseRange(String range) {
+    private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
+        long start = Long.parseLong(rangeObj.get("start"));
+        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 * 1 * 4 : Long.parseLong(rangeObj.get("end"));
+
+
+        long totalSize = Long.parseLong(total);
+        end = Math.min(end, totalSize - 1);
+        long length = end - start + 1;
+
+        long size = length / THREAD_NUM;
+        List<long[]> partList = new ArrayList<>();
+        for (int i = 0; i < THREAD_NUM; i++) {
+            long partEnd = Math.min(start + size, end);
+
+            partList.add(new long[]{start, partEnd});
+            start = partEnd + 1;
+        }
+        return partList;
+    }
+
+    private static Map<String, String> parseRange(String range) {
         SpiderDebug.log("parseRange:" + range);
         if (StringUtils.isNoneBlank(range)) {
 
             String[] ranges = StringUtils.split(range.replace("bytes=", ""), "-");
             String start = ranges[0];
             String end = ranges.length > 1 ? ranges[1] : "";
-            return new Range(start, end);
+            return Map.of("start", start, "end", end);
         }
         return null;
     }
@@ -193,29 +225,5 @@ public class ProxyVideo {
     /**
      * 视频range
      */
-    private static class Range {
-        private String start;
-        private String end;
 
-        public Range(String start, String end) {
-            start = start;
-            end = end;
-        }
-
-        public String getStart() {
-            return start;
-        }
-
-        public void setStart(String start) {
-            this.start = start;
-        }
-
-        public String getEnd() {
-            return end;
-        }
-
-        public void setEnd(String end) {
-            this.end = end;
-        }
-    }
 }
