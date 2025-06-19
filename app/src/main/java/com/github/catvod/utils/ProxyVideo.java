@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,6 +25,7 @@ public class ProxyVideo {
     private static final String GO_SERVER = "http://127.0.0.1:7777/";
     //线程数4
     private static final int THREAD_NUM = 16;
+    private static Map<String, Object[]> infoMap = new ConcurrentHashMap<>();
 
 
     public static String buildCommonProxyUrl(String url, Map<String, String> headers) {
@@ -79,11 +81,19 @@ public class ProxyVideo {
 
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) throws Exception {
+        Object[] info = infoMap.get(url);
+
+        //防止频繁请求
+        if (info == null) {
+            Map<String, String> newHeaders = new HashMap<>(headers);
+            newHeaders.put("range", "bytes=0-0");
+            newHeaders.put("Range", "bytes=0-0");
+            info = proxy(url, newHeaders);
+            infoMap.clear();
+            infoMap.put(url, info);
+        }
+
         SpiderDebug.log("--proxyMultiThread: start ");
-        Map<String, String> newHeaders = new HashMap<>(headers);
-        newHeaders.put("range", "bytes=0-0");
-        newHeaders.put("Range", "bytes=0-0");
-        Object[] info = proxy(url, newHeaders);
         int code = (int) info[0];
         if (code != 206) {
             return proxy(url, headers);
@@ -168,7 +178,7 @@ public class ProxyVideo {
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
         long start = Long.parseLong(rangeObj.get("start"));
-        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 *8 : Long.parseLong(rangeObj.get("end"));
+        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 * 8 : Long.parseLong(rangeObj.get("end"));
 
 
         long totalSize = Long.parseLong(total);
