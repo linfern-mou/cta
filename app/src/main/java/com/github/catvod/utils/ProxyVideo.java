@@ -177,6 +177,7 @@ public class ProxyVideo {
     }
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
+        SpiderDebug.log("generatePart.total:"+total);
         long start = Long.parseLong(rangeObj.get("start"));
         long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 * 8 : Long.parseLong(rangeObj.get("end"));
 
@@ -184,8 +185,11 @@ public class ProxyVideo {
         long totalSize = Long.parseLong(total);
         end = Math.min(end, totalSize - 1);
         long length = end - start + 1;
-
+        SpiderDebug.log("generatePart.start:"+start);
+        SpiderDebug.log("generatePart.end:"+end);
+        SpiderDebug.log("generatePart.length:"+length);
         long size = length / THREAD_NUM;
+        SpiderDebug.log("generatePart.size:"+size);
         List<long[]> partList = new ArrayList<>();
         for (int i = 0; i < THREAD_NUM; i++) {
             long partEnd = Math.min(start + size, end);
