@@ -7,7 +7,6 @@ import com.github.catvod.net.OkHttp;
 import com.github.catvod.spider.Proxy;
 import com.google.gson.Gson;
 import okhttp3.Response;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
@@ -16,9 +15,6 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class ProxyVideo {
 
@@ -113,63 +109,20 @@ public class ProxyVideo {
             SpiderDebug.log("没有range,无需分割");
             return proxy(url, headers);
         } else {
-            List<long[]> partList = generatePart(rangeObj, total);
 
-            ExecutorService service = Executors.newFixedThreadPool(THREAD_NUM);
-            // 存储执行结果的List
-            List<Future<Response>> results = new ArrayList<Future<Response>>();
-            for (long[] part : partList) {
 
-                String newRange = "bytes=" + part[0] + "-" + part[1];
-                SpiderDebug.log("下载开始" + ";newRange:" + newRange);
+            DownloadService.get().submitDownload(url, headers, Long.parseLong(total));
+            Object[] res = DownloadService.get().getDownloadBytes(Long.parseLong(rangeObj.get("start")));
 
-                Map<String, String> headerNew = new HashMap<>(headers);
-
-                headerNew.put("range", newRange);
-                headerNew.put("Range", newRange);
-                Future<Response> result = service.submit(() -> {
-                    try {
-
-                        return OkHttp.newCall(url, headerNew);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-                results.add(result);
-            }
-            byte[] bytes = null;
-
-            Response response = null;
-            for (int i = 0; i < THREAD_NUM; i++) {
-                // 获取包含返回结果的future对象
-                Future<Response> future = results.get(i);
-                // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
-                response = future.get();
-                bytes = ArrayUtils.addAll(bytes, response.body().bytes());
-                SpiderDebug.log("---第" + i + "块下载完成" + ";Content-Range:" + response.headers().get("Content-Range"));
-                SpiderDebug.log("---第" + i + "块下载完成" + ";content-range:" + response.headers().get("content-range"));
-
-            }
-            service.shutdown();
-            String contentType = response.headers().get("Content-Type");
-            String contentDisposition = response.headers().get("Content-Disposition");
-            if (contentDisposition != null) contentType = getMimeType(contentDisposition);
             Map<String, String> respHeaders = new HashMap<>();
-           /* respHeaders.put("Access-Control-Allow-Credentials", "true");
-            respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
-            for (String key : response.headers().names()) {
-                respHeaders.put(key, response.headers().get(key));
-            }
 
-            respHeaders.put("Content-Length", String.valueOf(bytes.length));
-            respHeaders.put("content-length", String.valueOf(bytes.length));
-            respHeaders.put("Content-Range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
-            respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
-            SpiderDebug.log("++proxy res contentType:" + contentType);
-            //   SpiderDebug.log("++proxy res body:" + response.body());
-            SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(respHeaders));
-            return new Object[]{response.code(), contentType, new ByteArrayInputStream(bytes), respHeaders};
+            respHeaders.put("Content-Length", ((long) res[1] - (long) res[0] + 1) + "");
+            respHeaders.put("content-length", ((long) res[1] - (long) res[0] + 1) + "");
+            respHeaders.put("Content-Range", String.format("bytes %s-%s/%s", res[1], res[2], total));
+            respHeaders.put("content-range", String.format("bytes %s-%s/%s", res[1], res[2], total));
+
+            return new Object[]{206, "video/mp4", new ByteArrayInputStream((byte[]) res[0]), respHeaders};
 
 
         }
@@ -177,7 +130,7 @@ public class ProxyVideo {
     }
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
-        SpiderDebug.log("generatePart.total:"+total);
+        SpiderDebug.log("generatePart.total:" + total);
         long start = Long.parseLong(rangeObj.get("start"));
         long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 * 8 : Long.parseLong(rangeObj.get("end"));
 
@@ -185,11 +138,11 @@ public class ProxyVideo {
         long totalSize = Long.parseLong(total);
         end = Math.min(end, totalSize - 1);
         long length = end - start + 1;
-        SpiderDebug.log("generatePart.start:"+start);
-        SpiderDebug.log("generatePart.end:"+end);
-        SpiderDebug.log("generatePart.length:"+length);
+        SpiderDebug.log("generatePart.start:" + start);
+        SpiderDebug.log("generatePart.end:" + end);
+        SpiderDebug.log("generatePart.length:" + length);
         long size = length / THREAD_NUM;
-        SpiderDebug.log("generatePart.size:"+size);
+        SpiderDebug.log("generatePart.size:" + size);
         List<long[]> partList = new ArrayList<>();
         for (int i = 0; i < THREAD_NUM; i++) {
             long partEnd = Math.min(start + size, end);
