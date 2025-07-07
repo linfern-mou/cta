@@ -1,5 +1,6 @@
 package com.github.catvod.utils;
 
+import android.os.Debug;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
@@ -31,7 +32,7 @@ public class ProxyVideo {
 
     private static final String GO_SERVER = "http://127.0.0.1:7777/";
     //线程数4
-    private static final int THREAD_NUM = 8;
+    private static final int THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2;
     private static Map<String, Object[]> infos = new HashMap<>();
 
 
@@ -98,6 +99,7 @@ public class ProxyVideo {
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) {
         ExecutorService service = Executors.newFixedThreadPool(THREAD_NUM);
+        SpiderDebug.log("--proxyMultiThread: THREAD_NUM "+THREAD_NUM);
 
         SequenceInputStream in = null;
         try {
@@ -122,6 +124,10 @@ public class ProxyVideo {
             String total = StringUtils.split(contentRange, "/")[1];
             SpiderDebug.log("--文件总大小:" + total);
 
+            //如果文件太小，也不走代理
+            if (Long.parseLong(total) < 1024 * 1024 * 100) {
+                return proxy(url, headers);
+            }
             String range = StringUtils.isAllBlank(headers.get("range")) ? headers.get("Range") : headers.get("range");
             SpiderDebug.log("---proxyMultiThread,Range:" + range);
             Map<String, String> rangeObj = parseRange(range);
