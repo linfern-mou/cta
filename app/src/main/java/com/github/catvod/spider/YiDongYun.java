@@ -80,19 +80,8 @@ public class YiDongYun extends Spider {
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
-        String playContent = "";
-        if (flag.contains("原画")) {
-            String contentId = id.split("\\+\\+")[0];
-            String linkID = id.split("\\+\\+")[1];
-            playContent = YunDrive.get().get4kVideoInfo(contentId, linkID);
 
-        } else {
-            String contentId = id.split("\\+\\+")[0];
-            String linkID = id.split("\\+\\+")[1];
-            playContent = YunDrive.get().fetchPlayUrl(contentId, linkID);
-        }
-        SpiderDebug.log("playContent:" + playContent);
-        return Result.get().url(playContent).octet().string();
+        return YunDrive.get().playerContent(id.split("\\+\\+"), flag);
     }
 
     /**

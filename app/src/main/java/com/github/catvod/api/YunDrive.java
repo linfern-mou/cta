@@ -1,9 +1,13 @@
 package com.github.catvod.api;
 
+import androidx.annotation.NonNull;
+
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.utils.Json;
+import com.github.catvod.utils.ProxyVideo;
 import com.github.catvod.utils.Util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -216,10 +220,8 @@ public class YunDrive {
     }
 
     public String get4kVideoInfo(String fid, String linkID) throws Exception {
-        String auth = YunTokenHandler.get().getToken();
-        SpiderDebug.log("auth:" + auth);
-        String phone = StringUtils.split(Util.base64Decode(auth), ":")[1];
-        SpiderDebug.log("phone:" + phone);
+        String auth = getAuth();
+        String phone = getPhone();
 
         // 构建 JSON 请求体
         Map<String, Object> requestBody = new HashMap<>();
@@ -255,12 +257,7 @@ public class YunDrive {
 
 
         // 构建请求
-        Map<String, String> header = new HashMap<>();
-
-        header.put("X-Deviceinfo", "||3|12.27.0|safari|13.1.2|1||macos 10.15.6|1324X381|zh-cn|||");
-        header.put("hcy-cool-flag", "1");
-        header.put("Authorization", "Basic " + auth);
-        header.put("Content-Type", "application/json");
+        Map<String, String> header = getHeader();
 
 
         OkResult okResult = OkHttp.post(baseUrl + "dlFromOutLinkV3", encrypt(Json.toJson(requestBody)), header);
@@ -272,6 +269,45 @@ public class YunDrive {
 
         // 解析 JSON 响应
         return null;
+    }
+
+    private static String getPhone() {
+        String phone = StringUtils.split(Util.base64Decode(getAuth()), ":")[1];
+        SpiderDebug.log("phone:" + phone);
+        return phone;
+    }
+
+    private static String getAuth() {
+        String auth = YunTokenHandler.get().getToken();
+        SpiderDebug.log("auth:" + auth);
+        return auth;
+    }
+
+    @NonNull
+    private static Map<String, String> getHeader() {
+        Map<String, String> header = new HashMap<>();
+
+        header.put("X-Deviceinfo", "||3|12.27.0|safari|13.1.2|1||macos 10.15.6|1324X381|zh-cn|||");
+        header.put("hcy-cool-flag", "1");
+        header.put("Authorization", "Basic " + getAuth());
+        header.put("Content-Type", "application/json");
+        return header;
+    }
+
+
+    public String playerContent(String[] split, String flag) throws Exception {
+        String playUrl = "";
+        if (flag.contains("原画")) {
+            String contentId = split[0];
+            String linkID = split[1];
+            playUrl = YunDrive.get().get4kVideoInfo(contentId, linkID);
+
+        } else {
+            String contentId = split[0];
+            String linkID = split[1];
+            playUrl = YunDrive.get().fetchPlayUrl(contentId, linkID);
+        }
+        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, getHeader())).octet().header(getHeader()).string();
     }
 
 }
