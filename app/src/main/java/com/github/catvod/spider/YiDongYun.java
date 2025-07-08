@@ -2,11 +2,13 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import com.github.catvod.api.YunDrive;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -49,7 +51,20 @@ public class YiDongYun extends Spider {
             }
 
         }
-        builder.append("移动", list);
+        builder.append("移动(极速)", list);
+        List<Vod.VodPlayBuilder.PlayUrl> list2 = new ArrayList<>();
+
+        for (String s : result.keySet()) {
+            vodName = s;
+            for (Map<String, String> stringStringMap : result.get(s)) {
+                Vod.VodPlayBuilder.PlayUrl playUrl = new Vod.VodPlayBuilder.PlayUrl();
+                playUrl.url = stringStringMap.get("path") + "++" + stringStringMap.get("linkID");
+                playUrl.name = stringStringMap.get("name");
+                list2.add(playUrl);
+            }
+
+        }
+        builder.append("移动(原画)", list2);
         Vod.VodPlayBuilder.BuildResult buildResult = builder.build();
         Vod vod = new Vod();
         vod.setVodId(ids.get(0));
@@ -65,9 +80,17 @@ public class YiDongYun extends Spider {
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
-        String contentId = id.split("\\+\\+")[0];
-        String linkID = id.split("\\+\\+")[1];
-        String playContent = YunDrive.get().fetchPlayUrl(contentId, linkID);
+        String playContent = "";
+        if (flag.contains("原画")) {
+            String contentId = id.split("\\+\\+")[0];
+            String linkID = id.split("\\+\\+")[1];
+            playContent = YunDrive.get().get4kVideoInfo(contentId, linkID);
+
+        } else {
+            String contentId = id.split("\\+\\+")[0];
+            String linkID = id.split("\\+\\+")[1];
+            playContent = YunDrive.get().fetchPlayUrl(contentId, linkID);
+        }
         SpiderDebug.log("playContent:" + playContent);
         return Result.get().url(playContent).octet().string();
     }
@@ -83,7 +106,10 @@ public class YiDongYun extends Spider {
         List<String> playFrom = new ArrayList<>();
         int i = 0;
         for (String id : ids) {
-            playFrom.add("移动" + i++);
+            i++;
+            playFrom.add("移动(极速)" + i);
+            playFrom.add("移动(原画)" + i);
+
         }
 
 
