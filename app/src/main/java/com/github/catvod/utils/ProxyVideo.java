@@ -1,6 +1,5 @@
 package com.github.catvod.utils;
 
-import android.os.Debug;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
@@ -99,7 +98,7 @@ public class ProxyVideo {
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) {
         ExecutorService service = Executors.newFixedThreadPool(THREAD_NUM);
-        SpiderDebug.log("--proxyMultiThread: THREAD_NUM "+THREAD_NUM);
+        SpiderDebug.log("--proxyMultiThread: THREAD_NUM " + THREAD_NUM);
 
         SequenceInputStream in = null;
         try {
@@ -206,11 +205,14 @@ public class ProxyVideo {
     }
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
-        long start = Long.parseLong(rangeObj.get("start"));
-        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + 1024 * 1024 * 8 : Long.parseLong(rangeObj.get("end"));
-
-
         long totalSize = Long.parseLong(total);
+        //超过10GB，分块是30Mb，不然是4MB
+        long partSize = totalSize > 8L * 1024L * 1024L * 1024L * 10L ? 1024 * 1024 * 8 * 30L : 1024 * 1024 * 8 * 4L;
+
+        long start = Long.parseLong(rangeObj.get("start"));
+        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + partSize : Long.parseLong(rangeObj.get("end"));
+
+
         end = Math.min(end, totalSize - 1);
         long length = end - start + 1;
 

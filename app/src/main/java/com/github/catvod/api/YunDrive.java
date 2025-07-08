@@ -301,13 +301,14 @@ public class YunDrive {
             String contentId = split[0];
             String linkID = split[1];
             playUrl = YunDrive.get().get4kVideoInfo(contentId, linkID);
+            playUrl = ProxyVideo.buildCommonProxyUrl(playUrl, new HashMap<>());
 
         } else {
             String contentId = split[0];
             String linkID = split[1];
             playUrl = YunDrive.get().fetchPlayUrl(contentId, linkID);
         }
-        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, new HashMap<>())).octet().header(getHeader()).string();
+        return Result.get().url(playUrl).octet().header(getHeader()).string();
     }
 
 }
