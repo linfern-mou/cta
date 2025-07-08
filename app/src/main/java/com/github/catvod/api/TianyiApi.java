@@ -175,7 +175,7 @@ public class TianyiApi {
 
 
         header.put("Cookie", cookieJar.loadForRequest("https://cloud.189.cn/api/portal/getNewVlcVideoPlayUrl.action"));
-        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, new HashMap<>())).octet().header(header).string();
+        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
 

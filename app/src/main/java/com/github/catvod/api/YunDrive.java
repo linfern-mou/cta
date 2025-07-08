@@ -307,7 +307,7 @@ public class YunDrive {
             String linkID = split[1];
             playUrl = YunDrive.get().fetchPlayUrl(contentId, linkID);
         }
-        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, getHeader())).octet().header(getHeader()).string();
+        return Result.get().url(ProxyVideo.buildCommonProxyUrl(playUrl, new HashMap<>())).octet().header(getHeader()).string();
     }
 
 }
