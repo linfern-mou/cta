@@ -206,8 +206,8 @@ public class ProxyVideo {
 
     private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
         long totalSize = Long.parseLong(total);
-        //超过10GB，分块是30Mb，不然是4MB
-        long partSize = totalSize > 8L * 1024L * 1024L * 1024L * 10L ? 1024 * 1024 * 8 * 30L : 1024 * 1024 * 8 * 4L;
+        //超过10GB，分块是10Mb，不然是2MB
+        long partSize = totalSize > 8L * 1024L * 1024L * 1024L * 10L ? 1024 * 1024 * 8 * 10L : 1024 * 1024 * 8 * 2L;
 
         long start = Long.parseLong(rangeObj.get("start"));
         long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + partSize : Long.parseLong(rangeObj.get("end"));
