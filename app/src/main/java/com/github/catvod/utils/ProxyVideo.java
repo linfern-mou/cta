@@ -70,10 +70,16 @@ public class ProxyVideo {
         SpiderDebug.log(" ++proxy res code:" + response.code());
         SpiderDebug.log(" ++proxy res header:" + Json.toJson(response.headers()));
         //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
-        String contentType = response.headers().get("Content-Type");
+       
+
+        String contentType = StringUtils.isAllBlank(response.headers().get("Content-Type")) ? response.headers().get("content-type") : response.headers().get("Content-Type");
         String contentDisposition = response.headers().get("Content-Disposition");
-        if (contentDisposition != null) contentType = getMimeType(contentDisposition);
+        if (contentDisposition != null && StringUtils.isAllBlank(contentType)) {
+            contentType = getMimeType(contentDisposition);
+        }
         Map<String, String> respHeaders = new HashMap<>();
+
+
        /* respHeaders.put("Access-Control-Allow-Credentials", "true");
         respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
@@ -179,9 +185,11 @@ public class ProxyVideo {
                 }
                 in = new SequenceInputStream(new Vector<>(inputStreams).elements());
                 service.shutdown();
-                String contentType = resHeader.get("Content-Type");
+                String contentType = StringUtils.isAllBlank(resHeader.get("Content-Type")) ? resHeader.get("content-type") : resHeader.get("Content-Type");
                 String contentDisposition = resHeader.get("Content-Disposition");
-                if (contentDisposition != null) contentType = getMimeType(contentDisposition);
+                if (contentDisposition != null && StringUtils.isAllBlank(contentType)) {
+                    contentType = getMimeType(contentDisposition);
+                }
             /* respHeaders.put("Access-Control-Allow-Credentials", "true");
             respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
@@ -204,7 +212,7 @@ public class ProxyVideo {
         }
     }
 
-    private static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
+    public static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
         long totalSize = Long.parseLong(total);
         //超过10GB，分块是10Mb，不然是2MB
         long partSize = totalSize > 8L * 1024L * 1024L * 1024L * 10L ? 1024 * 1024 * 8 * 10L : 1024 * 1024 * 8 * 2L;
@@ -227,7 +235,7 @@ public class ProxyVideo {
         return partList;
     }
 
-    private static Map<String, String> parseRange(String range) {
+    public static Map<String, String> parseRange(String range) {
         SpiderDebug.log("parseRange:" + range);
         if (StringUtils.isNoneBlank(range)) {
 
@@ -239,7 +247,7 @@ public class ProxyVideo {
         return null;
     }
 
-    private static String getMimeType(String contentDisposition) {
+    public static String getMimeType(String contentDisposition) {
         if (contentDisposition.endsWith(".mp4")) {
             return "video/mp4";
         } else if (contentDisposition.endsWith(".webm")) {
