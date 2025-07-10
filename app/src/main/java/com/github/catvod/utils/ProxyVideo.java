@@ -70,7 +70,7 @@ public class ProxyVideo {
         SpiderDebug.log(" ++proxy res code:" + response.code());
         SpiderDebug.log(" ++proxy res header:" + Json.toJson(response.headers()));
         //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
-       
+
 
         String contentType = StringUtils.isAllBlank(response.headers().get("Content-Type")) ? response.headers().get("content-type") : response.headers().get("Content-Type");
         String contentDisposition = response.headers().get("Content-Disposition");
@@ -135,75 +135,75 @@ public class ProxyVideo {
             }
             String range = StringUtils.isAllBlank(headers.get("range")) ? headers.get("Range") : headers.get("range");
             SpiderDebug.log("---proxyMultiThread,Range:" + range);
+
+            //没有range,强行给他一个range，让他去分片
+            if (StringUtils.isAllBlank(range)) {
+                range = "bytes=0-";
+            }
+            
             Map<String, String> rangeObj = parseRange(range);
-            //没有range,无需分割
-            if (rangeObj == null) {
-                SpiderDebug.log("没有range,无需分割");
-                return proxy(url, headers);
-            } else {
-                List<long[]> partList = generatePart(rangeObj, total);
+            List<long[]> partList = generatePart(rangeObj, total);
 
-                // 存储执行结果的List
-                List<Future<Response>> results = new ArrayList<>();
-                for (long[] part : partList) {
+            // 存储执行结果的List
+            List<Future<Response>> results = new ArrayList<>();
+            for (long[] part : partList) {
 
-                    String newRange = "bytes=" + part[0] + "-" + part[1];
-                    SpiderDebug.log("下载开始" + ";newRange:" + newRange);
+                String newRange = "bytes=" + part[0] + "-" + part[1];
+                SpiderDebug.log("下载开始" + ";newRange:" + newRange);
 
-                    Map<String, String> headerNew = new HashMap<>(headers);
+                Map<String, String> headerNew = new HashMap<>(headers);
 
-                    headerNew.put("range", newRange);
-                    headerNew.put("Range", newRange);
-                    Future<Response> result = service.submit(() -> {
-                        try {
+                headerNew.put("range", newRange);
+                headerNew.put("Range", newRange);
+                Future<Response> result = service.submit(() -> {
+                    try {
 
-                            return OkHttp.newCall(url, headerNew);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    results.add(result);
-                }
-                List<InputStream> inputStreams = new ArrayList<>();
+                        return OkHttp.newCall(url, headerNew);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                results.add(result);
+            }
+            List<InputStream> inputStreams = new ArrayList<>();
 
-                for (int i = 0; i < THREAD_NUM; i++) {
-                    // 获取包含返回结果的future对象
-                    Future<Response> future = results.get(i);
-                    // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
-                    Response response = future.get();
-                    okhttp3.ResponseBody body = response.body();
+            for (int i = 0; i < THREAD_NUM; i++) {
+                // 获取包含返回结果的future对象
+                Future<Response> future = results.get(i);
+                // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
+                Response response = future.get();
+                okhttp3.ResponseBody body = response.body();
                    /* int bytesRead;
                     while ((bytesRead = body.byteStream().read(bytes)) != -1) {
                         out.write(bytes, 0, bytesRead);
                     }*/
-                    inputStreams.add(body.byteStream());
+                inputStreams.add(body.byteStream());
 
 
-                    SpiderDebug.log("---第" + i + "块下载完成" + ";Content-Range:" + response.headers().get("Content-Range"));
-                    SpiderDebug.log("---第" + i + "块下载完成" + ";content-range:" + response.headers().get("content-range"));
+                SpiderDebug.log("---第" + i + "块下载完成" + ";Content-Range:" + response.headers().get("Content-Range"));
+                SpiderDebug.log("---第" + i + "块下载完成" + ";content-range:" + response.headers().get("content-range"));
 
-                }
-                in = new SequenceInputStream(new Vector<>(inputStreams).elements());
-                service.shutdown();
-                String contentType = StringUtils.isAllBlank(resHeader.get("Content-Type")) ? resHeader.get("content-type") : resHeader.get("Content-Type");
-                String contentDisposition = resHeader.get("Content-Disposition");
-                if (contentDisposition != null && StringUtils.isAllBlank(contentType)) {
-                    contentType = getMimeType(contentDisposition);
-                }
+            }
+            in = new SequenceInputStream(new Vector<>(inputStreams).elements());
+            service.shutdown();
+            String contentType = StringUtils.isAllBlank(resHeader.get("Content-Type")) ? resHeader.get("content-type") : resHeader.get("Content-Type");
+            String contentDisposition = resHeader.get("Content-Disposition");
+            if (contentDisposition != null && StringUtils.isAllBlank(contentType)) {
+                contentType = getMimeType(contentDisposition);
+            }
             /* respHeaders.put("Access-Control-Allow-Credentials", "true");
             respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
 
-                resHeader.put("Content-Length", String.valueOf(partList.get(THREAD_NUM - 1)[1] - partList.get(0)[0] + 1));
-                //  respHeaders.put("content-length", String.valueOf(bytes.length));
-                resHeader.put("Content-Range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
-                // respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
-                SpiderDebug.log("++proxy res contentType:" + contentType);
-                //   SpiderDebug.log("++proxy res body:" + response.body());
-                SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(resHeader));
-                return new Object[]{206, contentType, in, resHeader};
+            resHeader.put("Content-Length", String.valueOf(partList.get(THREAD_NUM - 1)[1] - partList.get(0)[0] + 1));
+            //  respHeaders.put("content-length", String.valueOf(bytes.length));
+            resHeader.put("Content-Range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
+            // respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
+            SpiderDebug.log("++proxy res contentType:" + contentType);
+            //   SpiderDebug.log("++proxy res body:" + response.body());
+            SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(resHeader));
+            return new Object[]{206, contentType, in, resHeader};
 
-            }
 
         } catch (Exception e) {
             SpiderDebug.log("proxyMultiThread error:" + e.getMessage());
