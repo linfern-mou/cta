@@ -29,7 +29,7 @@ object DownloadMT {
         /*  val service = Executors.newFixedThreadPool(THREAD_NUM)
           SpiderDebug.log("--proxyMultiThread: THREAD_NUM " + THREAD_NUM)*/
 
-        val `in`: SequenceInputStream?
+        val seqInputStream: SequenceInputStream?
         try {
             //缓存，避免每次都请求total等信息
 
@@ -108,17 +108,17 @@ object DownloadMT {
                 jobs.joinAll()
             }
 
-            `in` = SequenceInputStream(Vector(inputStreams).elements())
+            seqInputStream = SequenceInputStream(Vector(inputStreams).elements())
 
 
             //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
-            var contentType: String? = if (StringUtils.isAllBlank(
-                    resHeader["Content-Type"]
-                )
-            ) resHeader["content-type"] else resHeader["Content-Type"]
-            val contentDisposition: String = resHeader["Content-Disposition"]!!.toString()
-            if (StringUtils.isAllBlank(contentType)&& StringUtils.isNoneBlank(contentDisposition)) {
-                contentType = getMimeType(contentDisposition)
+            var contentType: String? = resHeader["Content-Type"]
+            if (StringUtils.isAllBlank(contentType)) {
+                contentType = resHeader["content-type"]
+            }
+
+            if (StringUtils.isAllBlank(contentType) && StringUtils.isNoneBlank(resHeader["Content-Disposition"])) {
+                contentType = getMimeType(resHeader["Content-Disposition"])
             }
 
 
@@ -131,10 +131,11 @@ object DownloadMT {
                 "bytes %s-%s/%s", partList[0][0], partList[THREAD_NUM - 1][1], total
             )
             // respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
-            SpiderDebug.log("++proxy res contentType:$contentType")
+            SpiderDebug.log("----proxy res contentType:$contentType")
             //   SpiderDebug.log("++proxy res body:" + response.body());
-            SpiderDebug.log("++proxy res respHeaders:" + Json.toJson(resHeader))
-            return arrayOf(206, contentType, `in`, resHeader)
+            SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
+            SpiderDebug.log("----proxy inputstream:$seqInputStream")
+            return arrayOf(206, contentType, seqInputStream, resHeader)
 
         } catch (e: Exception) {
             SpiderDebug.log("proxyMultiThread error:" + e.message)
