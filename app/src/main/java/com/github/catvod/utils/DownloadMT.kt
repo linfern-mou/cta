@@ -15,6 +15,8 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.io.SequenceInputStream
@@ -104,8 +106,8 @@ object DownloadMT {
                 }
             }
 
-            val pipedOutputStream = PipedOutputStream();
-            val pipedInputStream = PipedInputStream(pipedOutputStream);
+            val outputStream = ByteArrayOutputStream();
+
 
             CoroutineScope(Dispatchers.Default).launch {
                 repeat(jobs.size) { index ->
@@ -113,7 +115,7 @@ object DownloadMT {
                         for (bytes in channels[index]) {
                             // 处理读取的数据
 
-                            pipedOutputStream.write(bytes);
+                            outputStream.write(bytes);
 
                         }
 
@@ -148,7 +150,7 @@ object DownloadMT {
             SpiderDebug.log("----proxy res contentType:$contentType")
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
-
+            val pipedInputStream = ByteArrayInputStream(outputStream.toByteArray());
             return arrayOf(206, contentType, pipedInputStream, resHeader)
 
         } catch (e: Exception) {
