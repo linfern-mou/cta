@@ -43,6 +43,7 @@ object DownloadMT {
             }
 
             val code = info?.get(0) as Int
+            SpiderDebug.log("-----------code:" + code)
             if (code != 206) {
                 return proxy(url, headers)
             }
@@ -114,12 +115,8 @@ object DownloadMT {
                     launch {
                         for (bytes in channels[index]) {
                             // 处理读取的数据
-
                             outputStream.write(bytes);
-
                         }
-
-
                     }
                 }
                 // 等待所有下载完成
@@ -151,6 +148,7 @@ object DownloadMT {
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
             val pipedInputStream = ByteArrayInputStream(outputStream.toByteArray());
+            outputStream.close()
             return arrayOf(206, contentType, pipedInputStream, resHeader)
 
         } catch (e: Exception) {
