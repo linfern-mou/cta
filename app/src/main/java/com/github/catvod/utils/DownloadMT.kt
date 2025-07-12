@@ -15,9 +15,9 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
-import java.io.InputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.io.SequenceInputStream
-import java.util.Vector
 
 object DownloadMT {
     val THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
@@ -29,7 +29,7 @@ object DownloadMT {
         /*  val service = Executors.newFixedThreadPool(THREAD_NUM)
           SpiderDebug.log("--proxyMultiThread: THREAD_NUM " + THREAD_NUM)*/
 
-        val seqInputStream: SequenceInputStream?
+
         try {
             //缓存，避免每次都请求total等信息
 
@@ -70,7 +70,7 @@ object DownloadMT {
 
             // 存储执行结果的List
             val jobs = mutableListOf<Job>()
-            val channels = List(THREAD_NUM) { Channel<Response>() }
+            val channels = List(THREAD_NUM) { Channel<ByteArray>() }
             for ((index, part) in partList.withIndex()) {
 
 
@@ -82,33 +82,47 @@ object DownloadMT {
                 headerNew["range"] = newRange
                 headerNew["Range"] = newRange
                 jobs += CoroutineScope(Dispatchers.IO).launch {
-                    downloadRange(url, headerNew)?.let { channels[index].send(it) };
+                    val res = downloadRange(url, headerNew)
+
+                    if (res != null) {
+                        val buffer = ByteArray(1024)
+                        var bytesRead: Int = 0
+
+                        while (res.body()?.byteStream()?.read(buffer).also {
+                                if (it != null) {
+                                    bytesRead = it
+                                }
+                            } != -1) {
+                            // 处理读取的数据
+                            channels[index].send(buffer.copyOfRange(0, bytesRead))
+
+                        }
+                        channels[index].close() // 发送完成后关闭通道
+                        SpiderDebug.log("---第" + index + "块下载完成" + ";Content-Range:" + res.headers()["Content-Range"])
+                        SpiderDebug.log("---第" + index + "块下载完成" + ";content-range:" + res.headers()["content-range"])
+                    }
                 }
-
-
             }
 
-            val inputStreams: MutableList<InputStream> = ArrayList()
+            val pipedOutputStream = PipedOutputStream();
+            val pipedInputStream = PipedInputStream(pipedOutputStream);
+
             CoroutineScope(Dispatchers.Default).launch {
                 repeat(jobs.size) { index ->
                     launch {
-                        val response = channels[index].receive()
-                        val body = response.body();/* int bytesRead;
-                    while ((bytesRead = body.byteStream().read(bytes)) != -1) {
-                        out.write(bytes, 0, bytesRead);
-                    }*/
-                        inputStreams.add(body!!.byteStream())
+                        for (bytes in channels[index]) {
+                            // 处理读取的数据
+
+                            pipedOutputStream.write(bytes);
+
+                        }
 
 
-                        SpiderDebug.log("---第" + index + "块下载完成" + ";Content-Range:" + response.headers()["Content-Range"])
-                        SpiderDebug.log("---第" + index + "块下载完成" + ";content-range:" + response.headers()["content-range"])
                     }
                 }
                 // 等待所有下载完成
                 jobs.joinAll()
             }
-
-            seqInputStream = SequenceInputStream(Vector(inputStreams).elements())
 
 
             //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
@@ -134,8 +148,8 @@ object DownloadMT {
             SpiderDebug.log("----proxy res contentType:$contentType")
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
-            SpiderDebug.log("----proxy inputstream:$seqInputStream")
-            return arrayOf(206, contentType, seqInputStream, resHeader)
+
+            return arrayOf(206, contentType, pipedInputStream, resHeader)
 
         } catch (e: Exception) {
             SpiderDebug.log("proxyMultiThread error:" + e.message)
