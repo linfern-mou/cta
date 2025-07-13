@@ -100,28 +100,6 @@ public class ProxyVideo {
         return DownloadMT.INSTANCE.proxyMultiThread(url, headers);
     }
 
-    public static List<long[]> generatePart(Map<String, String> rangeObj, String total) {
-        long totalSize = Long.parseLong(total);
-        //超过10GB，分块是10Mb，不然是2MB
-        long partSize = totalSize > 8L * 1024L * 1024L * 1024L * 10L ? 1024 * 1024 * 8 * 10L : 1024 * 1024 * 8 * 2L;
-
-        long start = Long.parseLong(rangeObj.get("start"));
-        long end = StringUtils.isAllBlank(rangeObj.get("end")) ? start + partSize : Long.parseLong(rangeObj.get("end"));
-
-
-        end = Math.min(end, totalSize - 1);
-        long length = end - start + 1;
-
-        long size = length / THREAD_NUM;
-        List<long[]> partList = new ArrayList<>();
-        for (int i = 0; i < THREAD_NUM; i++) {
-            long partEnd = Math.min(start + size, end);
-
-            partList.add(new long[]{start, partEnd});
-            start = partEnd + 1;
-        }
-        return partList;
-    }
 
     public static Map<String, String> parseRange(String range) {
         SpiderDebug.log("parseRange:" + range);
