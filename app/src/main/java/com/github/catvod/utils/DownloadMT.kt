@@ -10,9 +10,11 @@ import com.github.catvod.utils.ProxyVideo.proxy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
 import java.io.ByteArrayInputStream
@@ -25,21 +27,27 @@ object DownloadMT {
     val THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
 
     private val infos = mutableMapOf<String, Array<Any>>();
-    fun proxyMultiThread(url: String, headers: Map<String, String>): Array<out Any?>? {
 
+    fun proxyMultiThread(url: String, headers: Map<String, String>): Array<out Any?>? =
+        runBlocking {
+            proxy(url, headers)
+        }
 
-        /*  val service = Executors.newFixedThreadPool(THREAD_NUM)
-          SpiderDebug.log("--proxyMultiThread: THREAD_NUM " + THREAD_NUM)*/
+    suspend fun proxy(url: String, headers: Map<String, String>): Array<out Any?>? {
+
+        /*  val service = Executors.newFixedThreadPool(THREAD_NUM)*/
+        SpiderDebug.log("--proxyMultiThread: THREAD_NUM " + THREAD_NUM)
 
 
         try {
             //缓存，避免每次都请求total等信息
 
 
-            val info = infos[url]
+            var info = infos[url]
             if (info == null) {
                 infos.clear()
-                infos[url] = getInfo(url, headers)
+                info = getInfo(url, headers)
+                infos[url] = info
             }
 
             val code = info?.get(0) as Int
@@ -57,9 +65,9 @@ object DownloadMT {
             SpiderDebug.log("--文件总大小:$total")
 
             //如果文件太小，也不走代理
-            if (total.toLong() < 1024 * 1024 * 100) {
-                return proxy(url, headers)
-            }
+            /* if (total.toLong() < 1024 * 1024 * 100) {
+                 return proxy(url, headers)
+             }*/
             var range =
                 if (StringUtils.isAllBlank(headers["range"])) headers["Range"] else headers["range"]
             if (StringUtils.isAllBlank(range)) range = "bytes=0-";
@@ -102,30 +110,30 @@ object DownloadMT {
                         }
                         channels[index].close() // 发送完成后关闭通道
                         SpiderDebug.log("---第" + index + "块下载完成" + ";Content-Range:" + res.headers()["Content-Range"])
-                        SpiderDebug.log("---第" + index + "块下载完成" + ";content-range:" + res.headers()["content-range"])
                     }
                 }
             }
 
             val outputStream = ByteArrayOutputStream();
+            var pipedInputStream: ByteArrayInputStream? = null
+            var contentType: String? = ""
 
-
-            CoroutineScope(Dispatchers.Default).launch {
+            val res = CoroutineScope(Dispatchers.Default).async {
                 repeat(jobs.size) { index ->
-                    launch {
-                        for (bytes in channels[index]) {
-                            // 处理读取的数据
-                            outputStream.write(bytes);
-                        }
+
+                    for (bytes in channels[index]) {
+                        // 处理读取的数据
+                        outputStream.write(bytes);
                     }
+
                 }
                 // 等待所有下载完成
                 jobs.joinAll()
             }
-
+            res.await()
 
             //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
-            var contentType: String? = resHeader["Content-Type"]
+            contentType = resHeader["Content-Type"]
             if (StringUtils.isAllBlank(contentType)) {
                 contentType = resHeader["content-type"]
             }
@@ -139,17 +147,21 @@ object DownloadMT {
         respHeaders.put("Access-Control-Allow-Origin", "*");*/
             resHeader["Content-Length"] =
                 (partList[THREAD_NUM - 1][1] - partList[0][0] + 1).toString()
-            //  respHeaders.put("content-length", String.valueOf(bytes.length));
+            resHeader.remove("content-length")
+
             resHeader["Content-Range"] = String.format(
                 "bytes %s-%s/%s", partList[0][0], partList[THREAD_NUM - 1][1], total
             )
-            // respHeaders.put("content-range", String.format("bytes %s-%s/%s", partList.get(0)[0], partList.get(THREAD_NUM - 1)[1], total));
+            resHeader.remove("content-range")
+
             SpiderDebug.log("----proxy res contentType:$contentType")
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
-            val pipedInputStream = ByteArrayInputStream(outputStream.toByteArray());
+            pipedInputStream = ByteArrayInputStream(outputStream.toByteArray());
             outputStream.close()
+
             return arrayOf(206, contentType, pipedInputStream, resHeader)
+
 
         } catch (e: Exception) {
             SpiderDebug.log("proxyMultiThread error:" + e.message)
