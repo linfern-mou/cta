@@ -65,13 +65,13 @@ object DownloadMT {
                 return proxy(url, headers)
             } else if (total.toLong() < 1024 * 1024 * 1024L * 10L) {
                 //10GB以下
-                threadNum = CORE_NUM * 4
+                threadNum = CORE_NUM * 3
             } else if (total.toLong() < 1024 * 1024 * 1024L * 40L) {
                 //40GB以下
-                threadNum = CORE_NUM * 8
+                threadNum = CORE_NUM * 4
             } else {
                 //40GB以上
-                threadNum = CORE_NUM * 16
+                threadNum = CORE_NUM * 5
             }
             var range =
                 if (StringUtils.isAllBlank(headers["range"])) headers["Range"] else headers["range"]
@@ -80,8 +80,11 @@ object DownloadMT {
             val rangeObj = parseRange(
                 range!!
             )
-            //没有range,无需分割
 
+            //视频开始，加大线程数
+            if (rangeObj["start"]!!.toLong() == 0L) {
+                threadNum = CORE_NUM * 4
+            }
             val partList = generatePart(rangeObj, total, threadNum)
 
             // 存储执行结果的List
@@ -186,12 +189,9 @@ object DownloadMT {
         if (totalSize < 1024 * 1024 * 1024L * 10L) {
             //10GB以下，分片8MB
             partSize = 1024 * 1024 * 8L
-        } else if (totalSize < 1024 * 1024 * 1024L * 40L) {
-            //40GB以下，分片32MB
-            partSize = 1024 * 1024 * 8L * 4
         } else {
-            //40GB以上，分片128MB
-            partSize = 1024 * 1024 * 8L * 4 * 4
+            //40GB以下，分片64MB
+            partSize = 1024 * 1024 * 8L * 8
         }
 
         var start = rangeObj["start"]!!.toLong()
