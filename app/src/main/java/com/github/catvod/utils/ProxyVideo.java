@@ -86,15 +86,7 @@ public class ProxyVideo {
         return new Object[]{response.code(), contentType, response.body().byteStream(), respHeaders};
     }
 
-    public static Object[] getInfo(String url, Map<String, String> headers) throws Exception {
-        SpiderDebug.log("--proxyMultiThread: start ");
-        Map<String, String> newHeaders = new HashMap<>(headers);
-        newHeaders.put("range", "bytes=0-0");
-        newHeaders.put("Range", "bytes=0-0");
-        Object[] info = proxy(url, newHeaders);
-        return info;
 
-    }
 
     public static Object[] proxyMultiThread(String url, Map<String, String> headers) {
         return DownloadMT.INSTANCE.proxyMultiThread(url, headers);
