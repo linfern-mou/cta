@@ -1,5 +1,5 @@
 {
-  "spider": "https://andoridspidermt.netlify.app/jar/custom_spider.jar;md5;b3413ed271088f5538e9c2208eb7cb87",
+  "spider": "https://andoridspidermt.netlify.app/jar/custom_spider.jar;md5;6c57cc4eb7ebe82b74f2a723c0323500",
   "lives": [
     {
       "name": "电视直播",
@@ -98,6 +98,22 @@
       "name": "TgSearch|Pan",
       "type": 3,
       "api": "csp_TgSearch",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    }, {
+      "key": "TgQuarkSearch",
+      "name": "TgQuarkSearch|Pan",
+      "type": 3,
+      "api": "csp_TgQuarkSearch",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    }, {
+      "key": "Tg189Search",
+      "name": "Tg189Search|Pan",
+      "type": 3,
+      "api": "csp_Tg189Search",
       "searchable": 1,
       "changeable": 1,
       "ext": {}
