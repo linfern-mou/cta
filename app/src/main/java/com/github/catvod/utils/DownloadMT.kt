@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.util.Vector
@@ -88,8 +89,8 @@ object DownloadMT {
 
             // 存储执行结果的List
             val jobs = mutableListOf<Job>()
-            val channels = List(threadNum) { Channel<ByteArray>() }
-            var inputStreams = mutableListOf<InputStream>()
+
+            val inputStreams = MutableList<InputStream>(threadNum) {  ByteArrayInputStream( ByteArray(1024)) }
             for ((index, part) in partList.withIndex()) {
 
                 val newRange = "bytes=" + part[0] + "-" + part[1]
