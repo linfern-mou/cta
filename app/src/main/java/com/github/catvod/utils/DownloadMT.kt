@@ -9,15 +9,14 @@ import com.github.catvod.utils.ProxyVideo.proxy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.SequenceInputStream
+import java.util.Vector
 import kotlin.math.min
 
 object DownloadMT {
@@ -90,8 +89,8 @@ object DownloadMT {
             // 存储执行结果的List
             val jobs = mutableListOf<Job>()
             val channels = List(threadNum) { Channel<ByteArray>() }
+            var inputStreams = mutableListOf<InputStream>()
             for ((index, part) in partList.withIndex()) {
-
 
                 val newRange = "bytes=" + part[0] + "-" + part[1]
                 SpiderDebug.log("下载开始;newRange:$newRange")
@@ -103,42 +102,39 @@ object DownloadMT {
                 jobs += CoroutineScope(Dispatchers.IO).launch {
                     val res = downloadRange(url, headerNew)
 
-                    if (res != null) {
-                        val buffer = ByteArray(1024)
-                        var bytesRead: Int = 0
+                    if (res != null) {/* val buffer = ByteArray(1024)
+                         var bytesRead: Int = 0
 
-                        while (res.body()?.byteStream()?.read(buffer).also {
-                                if (it != null) {
-                                    bytesRead = it
-                                }
-                            } != -1) {
-                            // 处理读取的数据
-                            channels[index].send(buffer.copyOfRange(0, bytesRead))
-
-                        }
-                        channels[index].close() // 发送完成后关闭通道
+                         while (res.body()?.byteStream()?.read(buffer).also {
+                                 if (it != null) {
+                                     bytesRead = it
+                                 }
+                             } != -1) {
+                             // 处理读取的数据
+                             channels[index].send(buffer.copyOfRange(0, bytesRead))*/
+                        inputStreams.add(index, res.body()?.byteStream()!!)
                         SpiderDebug.log("---第" + index + "块下载完成" + ";Content-Range:" + res.headers()["Content-Range"])
                     }
                 }
             }
 
-            val outputStream = ByteArrayOutputStream();
-            var pipedInputStream: ByteArrayInputStream? = null
-            var contentType: String? = ""
+            var contentType: String? = ""/*   val outputStream = ByteArrayOutputStream();
+               var pipedInputStream: ByteArrayInputStream? = null
 
-            val res = CoroutineScope(Dispatchers.Default).async {
-                repeat(jobs.size) { index ->
 
-                    for (bytes in channels[index]) {
-                        // 处理读取的数据
-                        outputStream.write(bytes);
-                    }
+               val res = CoroutineScope(Dispatchers.Default).async {
+                   repeat(jobs.size) { index ->
 
-                }
-                // 等待所有下载完成
-                jobs.joinAll()
-            }
-            res.await()
+                       for (bytes in channels[index]) {
+                           // 处理读取的数据
+                           outputStream.write(bytes);
+                       }
+
+                   }
+                   // 等待所有下载完成
+                   jobs.joinAll()
+               }
+               res.await()*/
 
             //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
             contentType = resHeader["Content-Type"]
@@ -165,10 +161,10 @@ object DownloadMT {
             SpiderDebug.log("----proxy res contentType:$contentType")
             //   SpiderDebug.log("++proxy res body:" + response.body());
             SpiderDebug.log("----proxy res respHeaders:" + Json.toJson(resHeader))
-            pipedInputStream = ByteArrayInputStream(outputStream.toByteArray());
-            outputStream.close()
+            val sequenceInputStream = SequenceInputStream(Vector(inputStreams).elements());
 
-            return arrayOf(206, contentType, pipedInputStream, resHeader)
+
+            return arrayOf(206, contentType, sequenceInputStream, resHeader)
 
 
         } catch (e: Exception) {
