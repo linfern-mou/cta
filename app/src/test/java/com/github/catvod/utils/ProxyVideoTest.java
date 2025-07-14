@@ -16,7 +16,7 @@ public class ProxyVideoTest {
         Server.get().start();
         String url = ProxyVideo.buildCommonProxyUrl(
                // "https://js.shipin520.com/pc/images/new/banner20250225.mp4", new HashMap<>());
-                "https://video.shipin520.com/videos/42/33/21/b_hsTXjZv04HeM1613423321_v1.mp4", new HashMap<>());
+                "http://172.16.1.217:18089/ng-grid/video.mp4", new HashMap<>());
         System.out.println(url);
         while (true) {
 
