@@ -155,9 +155,9 @@ object DownloadMT {
 
     fun generatePart(rangeObj: Map<String?, String>, total: String): List<LongArray> {
         val totalSize = total.toLong()
-        //超过10GB，分块是80Mb，不然是16MB
+        //超过10GB，分块是32Mb，不然是16MB
         val partSize =
-            if (totalSize > 8L * 1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
+            if (totalSize >  1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 4L else 1024 * 1024 * 8 * 2L
 
         var start = rangeObj["start"]!!.toLong()
         var end =
