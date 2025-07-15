@@ -53,10 +53,10 @@ object DownloadMT {
                 infos.clear()
                 info = CoroutineScope(Dispatchers.IO).async { getInfo(url, headers) }.await()
                 infos[url] = info
-                //支持分片，先返回这个1MB块
+            /*    //支持分片，先返回这个1MB块
                 if (info[0] as Int == 206) {
                     return info
-                }
+                }*/
             }
 
             val code = info[0] as Int
