@@ -18,7 +18,7 @@ import java.util.Vector
 import kotlin.math.min
 
 object DownloadMT {
-    private val THREAD_NUM: Int = 64
+    private var THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
 
     private val infos = mutableMapOf<String, Array<Any>>();
 
@@ -157,8 +157,9 @@ object DownloadMT {
         val totalSize = total.toLong()
         //超过10GB，分块是80MB，不然是16MB
         val partSize =
-            if (totalSize > 8L * 1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
-
+            if (totalSize >   1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
+        THREAD_NUM=
+            if (totalSize >  1024L * 1024L * 1024L * 10L) 64 else THREAD_NUM
         var start = rangeObj["start"]!!.toLong()
         var end =
             if (StringUtils.isAllBlank(rangeObj["end"])) start + partSize else rangeObj["end"]!!.toLong()
