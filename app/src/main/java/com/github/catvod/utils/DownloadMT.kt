@@ -157,9 +157,9 @@ object DownloadMT {
         val totalSize = total.toLong()
         //超过10GB，分块是80MB，不然是16MB
         val partSize =
-            if (totalSize >   1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
-        THREAD_NUM=
-            if (totalSize >  1024L * 1024L * 1024L * 10L) 64 else THREAD_NUM
+            if (totalSize > 1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
+        THREAD_NUM = if (totalSize > 1024L * 1024L * 1024L * 10L) 64 else Runtime.getRuntime()
+            .availableProcessors() * 2
         var start = rangeObj["start"]!!.toLong()
         var end =
             if (StringUtils.isAllBlank(rangeObj["end"])) start + partSize else rangeObj["end"]!!.toLong()
