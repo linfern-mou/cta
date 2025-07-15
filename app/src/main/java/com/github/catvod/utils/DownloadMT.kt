@@ -18,7 +18,7 @@ import java.util.Vector
 import kotlin.math.min
 
 object DownloadMT {
-    private val THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
+    private val THREAD_NUM: Int = 64
 
     private val infos = mutableMapOf<String, Array<Any>>();
 
@@ -75,9 +75,9 @@ object DownloadMT {
             SpiderDebug.log("--文件总大小:$total")
 
             //如果文件太小，也不走代理
-            /* if (total.toLong() < 1024 * 1024 * 100) {
-                 return proxy(url, headers)
-             }*/
+            if (total.toLong() < 1024 * 1024 * 64) {
+                return ProxyVideo.proxy(url, headers)
+            }
             var range =
                 if (StringUtils.isAllBlank(headers["range"])) headers["Range"] else headers["range"]
             if (StringUtils.isAllBlank(range)) range = "bytes=0-";
@@ -155,7 +155,7 @@ object DownloadMT {
 
     fun generatePart(rangeObj: Map<String?, String>, total: String): List<LongArray> {
         val totalSize = total.toLong()
-        //超过10GB，分块是80Mb，不然是16MB
+        //超过10GB，分块是80MB，不然是16MB
         val partSize =
             if (totalSize > 8L * 1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 10L else 1024 * 1024 * 8 * 2L
 

@@ -25,7 +25,7 @@ class TgSearch : Cloud() {
     @Throws(Exception::class)
     override fun searchContent(key: String, quick: Boolean): String {
         val url =
-            URL + "?channelUsername=tianyirigeng,tyypzhpd,XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,dianyingshare&keyword=" + URLEncoder.encode(
+            URL + "?channelUsername=tianyirigeng,tyypzhpd,XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,dianyingshare&pic=true&keyword=" + URLEncoder.encode(
                 key, Charset.defaultCharset().name()
             )
         val list: MutableList<Vod> = ArrayList()
@@ -36,8 +36,8 @@ class TgSearch : Cloud() {
                 val doc = Jsoup.parse(s)
                 val id = doc.select(" a").eachAttr("href")
                     .first { it.contains("189") || it.contains("139") || it.contains("quark") }
-
-                list.add(Vod(id, s, "", ""))
+                val name = doc.select("strong").text()
+                list.add(Vod(id, name, "", ""))
             }
         }
 

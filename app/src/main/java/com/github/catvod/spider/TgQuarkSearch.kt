@@ -26,7 +26,7 @@ class TgQuarkSearch : Cloud() {
     @Throws(Exception::class)
     override fun searchContent(key: String, quick: Boolean): String {
         val url =
-            URL + "?channelUsername=alyp_1,clouddriveresources,dianyingshare,hdhhd21,jdjdn1111,leoziyuan,NewQuark,PanjClub,Quark_Movies,xiangxiunb,yunpanchat,yunpanqk,XiangxiuNB,alyp_4K_Movies,alyp_Animation,alyp_TV,alyp_JLP&keyword=" + URLEncoder.encode(
+            URL + "?channelUsername=alyp_1,clouddriveresources,dianyingshare,hdhhd21,jdjdn1111,leoziyuan,NewQuark,PanjClub,Quark_Movies,xiangxiunb,yunpanchat,yunpanqk,XiangxiuNB,alyp_4K_Movies,alyp_Animation,alyp_TV,alyp_JLP&pic=true&keyword=" + URLEncoder.encode(
                 key,
                 Charset.defaultCharset().name()
             )
@@ -38,8 +38,8 @@ class TgQuarkSearch : Cloud() {
                 val doc = Jsoup.parse(s)
                 val id = doc.select(" a").eachAttr("href")
                     .first { it.contains("189") || it.contains("139")|| it.contains("quark") }
-
-                list.add(Vod(id, s, "", ""))
+                val name=doc.select("strong").text()
+                list.add(Vod(id, name, "", ""))
             }
         }
 

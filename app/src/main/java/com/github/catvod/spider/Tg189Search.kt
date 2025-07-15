@@ -25,7 +25,7 @@ class Tg189Search : Cloud() {
     @Throws(Exception::class)
     override fun searchContent(key: String, quick: Boolean): String {
         val url =
-            URL + "?channelUsername=cloud189_group,yunpan139,cloud189_group,cloudtianyi,kuakeclound,tianyirigeng,txtyzy,tyypzhpd,tyysypzypd,yunpan189&keyword=" + URLEncoder.encode(
+            URL + "?channelUsername=cloud189_group,yunpan139,cloud189_group,cloudtianyi,kuakeclound,tianyirigeng,txtyzy,tyypzhpd,tyysypzypd,yunpan189&pic=true&keyword=" + URLEncoder.encode(
                 key, Charset.defaultCharset().name()
             )
         val list: MutableList<Vod> = ArrayList()
@@ -36,8 +36,9 @@ class Tg189Search : Cloud() {
                 val doc = Jsoup.parse(s)
                 val id = doc.select(" a").eachAttr("href")
                     .first { it.contains("189") || it.contains("139") }
+                val name=doc.select("strong").text()
 
-                list.add(Vod(id, s, "", ""))
+                list.add(Vod(id, name, "", ""))
             }
         }
 
