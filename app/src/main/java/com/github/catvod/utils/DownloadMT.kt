@@ -18,7 +18,7 @@ import java.util.Vector
 import kotlin.math.min
 
 object DownloadMT {
-    private val THREAD_NUM: Int = 64//Runtime.getRuntime().availableProcessors() * 2
+    private val THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
 
     private val infos = mutableMapOf<String, Array<Any>>();
 
