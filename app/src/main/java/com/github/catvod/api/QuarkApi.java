@@ -25,6 +25,7 @@ import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.Json;
+import com.github.catvod.utils.KtorServer;
 import com.github.catvod.utils.Notify;
 import com.github.catvod.utils.Path;
 import com.github.catvod.utils.ProxyVideo;
@@ -234,7 +235,7 @@ public class QuarkApi {
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
-        return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
+        return Result.get().url(KtorServer.INSTANCE.buildProxyUrl(playUrl, header)).octet().header(header).string();
     }
 
     private String proxyVideoUrl(String url, Map<String, String> header) {

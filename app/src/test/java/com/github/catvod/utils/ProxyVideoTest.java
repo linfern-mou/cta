@@ -1,6 +1,5 @@
 package com.github.catvod.utils;
 
-import com.github.catvod.server.Server;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -13,11 +12,13 @@ public class ProxyVideoTest {
     @Test
     public void proxyMultiThread() {
         //  ProxyVideo.proxyMultiThread()
-        Server.get().start();
+      /*  Server.get().start();
         String url = ProxyVideo.buildCommonProxyUrl(
                // "https://js.shipin520.com/pc/images/new/banner20250225.mp4", new HashMap<>());
                 "http://172.16.1.217:18089/ng-grid/video.mp4", new HashMap<>());
-        System.out.println(url);
+        System.out.println(url);*/
+        KtorServer.INSTANCE.start();
+        System.out.println(KtorServer.INSTANCE.buildProxyUrl("http://172.16.1.217:18089/ng-grid/video.mp4", new HashMap<>()));
         while (true) {
 
         }
