@@ -70,7 +70,7 @@
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
 # Ktor Server
 
--keep class io.ktor.server.netty.EngineMain { *; }
+
 -keep class io.ktor.server.config.HoconConfigLoader { *; }
 
 # Logback (Custom rules, see https://github.com/krschultz/android-proguard-snippets/blob/master/libraries/proguard-logback-android.pro)
