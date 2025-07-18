@@ -11,7 +11,7 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.jetty.Jetty
+import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
@@ -39,7 +39,7 @@ object KtorServer {
 
         do {
             try {
-                ser = embeddedServer(Jetty, port) {
+                ser = embeddedServer(Netty, port) {
                     install(CallLogging)
 
 
