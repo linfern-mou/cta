@@ -9,8 +9,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
@@ -33,7 +33,7 @@ object KtorServer {
     //每个片1MB
     private val partSize = 1024 * 1024 * 1
     private val server by lazy {
-        embeddedServer(Netty, port) {
+        embeddedServer(CIO, port) {
             install(CallLogging)
 
 
