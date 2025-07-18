@@ -60,6 +60,7 @@ object KtorServer {
 
     /** 启动服务器 */
     fun start() {
+        SpiderDebug.log("ktorServer start on $port")
         CoroutineScope(Dispatchers.IO).launch { server.start(true) }
     }
 
