@@ -82,4 +82,3 @@
 -keep class org.slf4j.** { *; }
 -dontwarn org.slf4j.**
 
--dontwarn ch.qos.logback.core.net.*
