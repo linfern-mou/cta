@@ -76,14 +76,18 @@
 # Logback (Custom rules, see https://github.com/krschultz/android-proguard-snippets/blob/master/libraries/proguard-logback-android.pro)
 # to ignore warnings coming from slf4j and logback
 
--keep class ch.qos.** { *; }
--keepclassmembers class ch.qos.** { *; }
--dontwarn ch.qos.**
+# Remove slf4j log
+-assumenosideeffects class * implements org.slf4j.Logger {
+    public *** trace(...);
+    public *** debug(...);
+    public *** info(...);
+    public *** warn(...);
+    public *** error(...);
+}
 
--keep class org.slf4j.** { *; }
--keep  @org.slf4j.* class * { *; }
--keepclassmembers class org.slf4j.** { *; }
+-assumenosideeffects class * implements org.slf4j.LoggerFactory {
+    public *** getLogger(...);
+}
 
--dontwarn org.slf4j.**
 
 -keepattributes SourceFile,LineNumberTable
