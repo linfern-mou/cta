@@ -9,8 +9,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.cio.CIO
+
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
@@ -30,14 +31,14 @@ object KtorServer {
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private val infos = mutableMapOf<String, Array<Any>>()
     var ser: io.ktor.server.engine.ApplicationEngine? = null
-    var port = 12345
+    var port = 10010
     //每个片1MB
     private val partSize = 1024 * 1024 * 1
     fun init() {
 
         do {
             try {
-                ser = embeddedServer(CIO, port) {
+                ser = embeddedServer(Netty, port) {
                     install(CallLogging)
 
 
@@ -59,7 +60,8 @@ object KtorServer {
                             )
                         }
                     }
-                }.start(wait = false)
+                }.start(wait = true)
+
             } catch (e: Exception) {
                 SpiderDebug.log("start server e:" + e.message)
                 ++port

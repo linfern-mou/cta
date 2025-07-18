@@ -85,7 +85,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
     implementation 'io.ktor:ktor-server-core:2.3.4'
-    implementation 'io.ktor:ktor-server-cio:2.3.4'
+    implementation 'io.ktor:ktor-server-netty:2.3.4'
 
     implementation 'io.ktor:ktor-server-call-logging:2.3.4'
     implementation("org.slf4j:slf4j-android:1.7.36")
