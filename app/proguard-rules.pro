@@ -79,3 +79,5 @@
 -dontwarn org.eclipse.jetty.npn.NextProtoNego$ServerProvider
 -dontwarn org.eclipse.jetty.npn.NextProtoNego
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-dontwarn org.slf4j**
+-dontwarn org.slf4j.**

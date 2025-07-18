@@ -8,8 +8,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -32,6 +34,7 @@ object KtorServer {
     private val partSize = 1024 * 1024 * 1
     private val server by lazy {
         embeddedServer(Netty, port) {
+            install(CallLogging)
 
 
             routing {
@@ -107,7 +110,8 @@ object KtorServer {
             }
 
             // 解析范围请求
-            val (startPoint, endPoint) = parseRangePoint(rangeHeader
+            val (startPoint, endPoint) = parseRangePoint(
+                rangeHeader
             )
             SpiderDebug.log("startPoint: $startPoint; endPoint: $endPoint")
             val contentLength = getContentLength(url, headers)

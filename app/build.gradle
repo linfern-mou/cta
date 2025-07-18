@@ -86,9 +86,8 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
     implementation 'io.ktor:ktor-server-core:2.3.4'
     implementation 'io.ktor:ktor-server-netty:2.3.4'
-    implementation 'io.ktor:ktor-client-content-negotiation:2.3.4'
-    implementation 'io.ktor:ktor-server-content-negotiation:2.3.4'
-    implementation 'io.ktor:ktor-client-logging-jvm:2.3.4'
+
+    implementation 'io.ktor:ktor-server-call-logging:2.3.4'
     //implementation 'wang.harlon.quickjs:wrapper-java:1.0.0'
     // implementation(ext: 'aar', name: 'quickjs', group: 'fongmi', version: 'release')
     // api 'wang.harlon.quickjs:wrapper-android:2.0.0'
