@@ -72,6 +72,7 @@
 
 
 -keep class io.ktor.server.config.HoconConfigLoader { *; }
+-keep class io.netty.** { *; }
 
 # Logback (Custom rules, see https://github.com/krschultz/android-proguard-snippets/blob/master/libraries/proguard-logback-android.pro)
 # to ignore warnings coming from slf4j and logback
