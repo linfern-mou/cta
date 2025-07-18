@@ -26,48 +26,57 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
 object KtorServer {
-    private const val port = 12345
+    private var port = 12345
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private val infos = mutableMapOf<String, Array<Any>>()
+    var ser: io.ktor.server.engine.ApplicationEngine? = null
 
     //每个片1MB
     private val partSize = 1024 * 1024 * 1
-    private val server by lazy {
-        embeddedServer(CIO, port) {
-            install(CallLogging)
+    fun init() {
+        do {
+            try {
+                ser = embeddedServer(CIO, port) {
+                    install(CallLogging)
 
 
-            routing {
-                get("/") {
-                    call.respondText("ktor running on $port", ContentType.Text.Plain)
-                }
-                get("/proxy") {
+                    routing {
+                        get("/") {
+                            call.respondText("ktor running on $port", ContentType.Text.Plain)
+                        }
+                        get("/proxy") {
+                            SpiderDebug.log("代理中: ${call.parameters["url"]}")
 
 
-                    val url = Util.base64Decode(call.parameters["url"])
-                    val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                        Util.base64Decode(call.parameters["headers"]), MutableMap::class.java
-                    )
-                    proxyAsync(
-                        url, header, call
-                    )
-
-
-                }
+                            val url = Util.base64Decode(call.parameters["url"])
+                            val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
+                                Util.base64Decode(call.parameters["headers"]),
+                                MutableMap::class.java
+                            )
+                            proxyAsync(
+                                url, header, call
+                            )
+                        }
+                    }
+                }.start(wait = false)
+            } catch (e: Exception) {
+                SpiderDebug.log("start server e:" + e.message)
+                ++port
+                ser?.stop()
             }
-        }
+        } while (port < 13000)
     }
 
     /** 启动服务器 */
     fun start() {
         SpiderDebug.log("ktorServer start on $port")
-        CoroutineScope(Dispatchers.IO).launch { server.start(true) }
+        CoroutineScope(Dispatchers.IO).launch { init() }
     }
 
 
     /** 停止服务器 */
     fun stop() {
-        server.stop(1_000, 2_000)
+        ser?.stop(1_000, 2_000)
     }
 
     fun buildProxyUrl(url: String, headers: Map<String, String>): String {
