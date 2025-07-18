@@ -68,6 +68,7 @@
 -dontwarn org.eclipse.jetty.npn.NextProtoNego$ServerProvider
 -dontwarn org.eclipse.jetty.npn.NextProtoNego
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
+
 # Ktor Server
 
 
@@ -92,3 +93,12 @@
 
 
 -keepattributes SourceFile,LineNumberTable
+
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn java.lang.Module
+-dontwarn javax.naming.ldap.LdapName
+-dontwarn javax.naming.ldap.Rdn
+-dontwarn org.eclipse.jetty.alpn.ALPN$Provider
+-dontwarn org.eclipse.jetty.alpn.ALPN$ServerProvider
+-dontwarn org.eclipse.jetty.alpn.ALPN

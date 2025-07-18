@@ -11,7 +11,7 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.server.jetty.Jetty
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
@@ -32,13 +32,14 @@ object KtorServer {
     private val infos = mutableMapOf<String, Array<Any>>()
     var ser: io.ktor.server.engine.ApplicationEngine? = null
     var port = 10010
+
     //每个片1MB
     private val partSize = 1024 * 1024 * 1
     fun init() {
 
         do {
             try {
-                ser = embeddedServer(Netty, port) {
+                ser = embeddedServer(Jetty, port) {
                     install(CallLogging)
 
 
