@@ -26,14 +26,15 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
 object KtorServer {
-    private var port = 12345
+
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private val infos = mutableMapOf<String, Array<Any>>()
     var ser: io.ktor.server.engine.ApplicationEngine? = null
-
+    var port = 12345
     //每个片1MB
     private val partSize = 1024 * 1024 * 1
     fun init() {
+
         do {
             try {
                 ser = embeddedServer(CIO, port) {
@@ -65,11 +66,12 @@ object KtorServer {
                 ser?.stop()
             }
         } while (port < 13000)
+        SpiderDebug.log("ktorServer start on $port")
     }
 
     /** 启动服务器 */
     fun start() {
-        SpiderDebug.log("ktorServer start on $port")
+
         CoroutineScope(Dispatchers.IO).launch { init() }
     }
 
