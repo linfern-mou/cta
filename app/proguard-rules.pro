@@ -77,9 +77,13 @@
 # to ignore warnings coming from slf4j and logback
 
 -keep class ch.qos.** { *; }
+-keepclassmembers class ch.qos.** { *; }
 -dontwarn ch.qos.**
 
 -keep class org.slf4j.** { *; }
+-keep  @org.slf4j.* class * { *; }
+-keepclassmembers class org.slf4j.** { *; }
+
 -dontwarn org.slf4j.**
 
 -keepattributes SourceFile,LineNumberTable
