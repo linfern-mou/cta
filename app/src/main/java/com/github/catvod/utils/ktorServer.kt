@@ -1,3 +1,4 @@
+/*
 package com.github.catvod.utils
 
 import com.github.catvod.crawler.SpiderDebug
@@ -72,14 +73,18 @@ object KtorServer {
         SpiderDebug.log("ktorServer start on $port")
     }
 
-    /** 启动服务器 */
+    */
+/** 启动服务器 *//*
+
     fun start() {
 
         CoroutineScope(Dispatchers.IO).launch { init() }
     }
 
 
-    /** 停止服务器 */
+    */
+/** 停止服务器 *//*
+
     fun stop() {
         ser?.stop(1_000, 2_000)
     }
@@ -94,9 +99,11 @@ object KtorServer {
         }"
     }
 
-    /**
+    */
+/**
      * 获取是否分片信息，顺带请求一个1MB块
-     */
+     *//*
+
     @Throws(java.lang.Exception::class)
     fun getInfo(url: String?, headers: Map<String, String>): Array<Any> {
         val newHeaders: MutableMap<String, String> = java.util.HashMap(headers)
@@ -219,3 +226,4 @@ object KtorServer {
         url: String, headerNew: Map<String, String>
     ): Response? = OkHttp.newCall(url, headerNew)
 }
+*/

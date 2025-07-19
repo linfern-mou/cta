@@ -73,7 +73,7 @@
 
 
 -keep class io.ktor.server.config.HoconConfigLoader { *; }
--keep class io.netty.** { *; }
+
 
 # Logback (Custom rules, see https://github.com/krschultz/android-proguard-snippets/blob/master/libraries/proguard-logback-android.pro)
 # to ignore warnings coming from slf4j and logback
@@ -95,8 +95,53 @@
 -keepattributes SourceFile,LineNumberTable
 
 -keepattributes Signature,InnerClasses
--keepclasseswithmembers class io.netty.** {
-    *;
+# 保留所有 Netty 类
+-keep class io.netty.** { *; }
+
+# 保留 Netty 的内部类
+-keep class io.netty.**$* { *; }
+
+# 保留 Netty 的注解
+-keep @interface io.netty.**
+
+# 保留 Netty 的 native 方法
+-keepclasseswithmembernames,includedescriptorclasses class io.netty.** {
+    native <methods>;
 }
+
+# 保留 Netty 的序列化相关类
+-keepclassmembers class io.netty.** implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+# 保留 Netty 的 ChannelFuture 相关类
+-keep class io.netty.channel.ChannelFuture { *; }
+-keep class io.netty.util.concurrent.Future { *; }
+
+# 保留 Netty 的异常类
+-keep class io.netty.** extends java.lang.Exception { *; }
+
+# 保留 Netty 的注解处理器
+-keepclassmembers class * extends io.netty.** {
+    @io.netty.** *;
+}
+
+# 不警告 Netty 相关的类
 -dontwarn io.netty.**
--dontwarn sun.**
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn java.beans.BeanInfo
+-dontwarn java.beans.IntrospectionException
+-dontwarn java.beans.Introspector
+-dontwarn java.beans.PropertyDescriptor
+-dontwarn javax.lang.model.element.Modifier
+
+
+
+# 禁用代码混淆
+-dontobfuscate
