@@ -11,6 +11,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Headers
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
 import java.io.OutputStreamWriter
 import java.net.InetSocketAddress
 import java.nio.charset.Charset
@@ -21,6 +24,7 @@ object ProxyServer {
     private const val partSize = 1024 * 1024 * 1
     private var port = 0
     private var httpServer: HttpServer? = null
+    private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
     fun stop() {
         httpServer?.stop(1_000)
@@ -33,6 +37,8 @@ object ProxyServer {
             httpServer = HttpServer.create(InetSocketAddress(port), 100);
             httpServer?.createContext("/") { httpExchange ->
                 run {
+                    httpExchange.sendResponseHeaders(200, "server running  ".length.toLong());
+
                     val os = httpExchange.responseBody
                     val writer = OutputStreamWriter(os, Charset.defaultCharset())
                     writer.write("server running  ")
@@ -68,8 +74,8 @@ object ProxyServer {
 
             httpServer?.stop(1000)
         }
-
-        SpiderDebug.log("ktorServer start on " + httpServer?.address?.port)
+        port = httpServer?.address?.port!!
+        SpiderDebug.log("ktorServer start on " + port)
 
     }
 
@@ -78,6 +84,9 @@ object ProxyServer {
     ) {
         val channels = List(THREAD_NUM) { Channel<ByteArray>() }
         val outputStream = httpExchange.responseBody
+
+        val bufferedOutputStream = BufferedOutputStream(outputStream)
+
         try {
             SpiderDebug.log("--proxyMultiThread: THREAD_NUM: $THREAD_NUM")
 
@@ -96,15 +105,24 @@ object ProxyServer {
             val (startPoint, endPoint) = parseRangePoint(
                 rangeHeader
             )
+
+            //缓存response header
+            var info = infos[url]
+            if (info == null) {
+                info = getInfo(url, headers)
+                infos[url] = info
+            }
+
             SpiderDebug.log("startPoint: $startPoint; endPoint: $endPoint")
-            val contentLength = getContentLength(url, headers)
+            val contentLength = getContentLength(info)
             SpiderDebug.log("contentLength: $contentLength")
             val finalEndPoint = if (endPoint == -1L) contentLength - 1 else endPoint
 
             httpExchange.responseHeaders.apply {
                 set("Connection", "keep-alive")
-                set("ContentLength", (finalEndPoint - startPoint + 1).toString())
-                set("ContentRange", "bytes $startPoint-$finalEndPoint/$contentLength")
+                set("Content-Length", (finalEndPoint - startPoint + 1).toString())
+                set("Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength")
+                set("Content-Type", info["Content-Type"]?.get(0))
             }
             httpExchange.sendResponseHeaders(206, 0)
 
@@ -138,23 +156,23 @@ object ProxyServer {
 
                     val data = channels[index].receive()
                     SpiderDebug.log("Received chunk: ${data.size} bytes")
-                    CoroutineScope(Dispatchers.IO).launch {
-                        outputStream.write(data)
-                    }
-                }
 
+                    bufferedOutputStream.write(data)
+                    bufferedOutputStream.flush()
+
+                }
 
             }
         } catch (e: Exception) {
             SpiderDebug.log("error: ${e.message}")
-            withContext(Dispatchers.IO) {
-                outputStream.write("error: ${e.message}".toByteArray())
-            }
+
+            outputStream.write("error: ${e.message}".toByteArray())
+
         } finally {
             channels.forEach { it.close() }
-            withContext(Dispatchers.IO) {
-                outputStream.close()
-            }
+            bufferedOutputStream.close()
+            outputStream.close()
+
             httpExchange.close()
         }
     }
@@ -185,11 +203,20 @@ object ProxyServer {
         return start to end
     }
 
-    private fun getContentLength(url: String, headers: Map<String, String>): Long {
-        // 实现获取内容长度逻辑
+    fun getInfo(
+        url: String?, headers: Map<String, String>
+    ): MutableMap<String, MutableList<String>> {
+        val newHeaders: MutableMap<String, String> = java.util.HashMap(headers)
+        newHeaders["Range"] = "bytes=0-" + (1024 * 1024 - 1)
+        newHeaders["range"] = "bytes=0-" + (1024 * 1024 - 1)
         val res = OkHttp.newCall(url, headers)
         res.body()?.close()
-        return res.headers("Content-Length")[0]?.toLong() ?: 0L
+        return res.headers().toMultimap()
+    }
+
+    private fun getContentLength(info: MutableMap<String, MutableList<String>>): Long {
+        // 实现获取内容长度逻辑
+        return info["Content-Length"]?.get(0)?.toLong() ?: 0L
     }
 
     private fun getVideoStream(
