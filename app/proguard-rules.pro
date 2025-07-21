@@ -64,11 +64,14 @@
 
 }
 
--assumenosideeffects class * implements com.hibegin.common.util.LoggerUtil {
-    public *** getLogger(...);
+-assumenosideeffects class  com.hibegin.common.util.LoggerUtil {
+    getLogger(...);
+}
+-assumenosideeffects class * {
+    private static final java.util.logging.Logger LOGGER ;
 }
 
-
+-keep class androidx.core.view.accessibility.** { *; }
 -keepattributes SourceFile,LineNumberTable
 
 
