@@ -13,18 +13,18 @@ object ProxyServer {
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private const val partSize = 1024 * 1024 * 1
     private var port = 12345
-
+    private var server: Server? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
     fun stop() {
-       stop()
+        server?.stop(1000)
     }
 
     fun start() {
 
 
         try {
-            Server(InetSocketAddress(port)).apply {
+            server = Server(InetSocketAddress(port)).apply {
                 context("/api") {
                     get("/hello") { "Hello, world!" }
                 }

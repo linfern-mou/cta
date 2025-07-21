@@ -43,7 +43,7 @@ public class Init {
     public static void init(Context context) {
         get().app = ((Application) context);
         SpiderDebug.log("自定義爬蟲代碼載入成功！"+"1");
-       // ProxyServer.INSTANCE.stop();
+        ProxyServer.INSTANCE.stop();
         ProxyServer.INSTANCE.start();
     }
 
