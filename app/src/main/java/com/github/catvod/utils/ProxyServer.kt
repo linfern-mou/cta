@@ -1,97 +1,85 @@
 package com.github.catvod.utils
 
+
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.google.gson.Gson
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpServer
+import com.hibegin.http.server.SimpleWebServer
+import com.hibegin.http.server.WebServerBuilder
+import com.hibegin.http.server.api.HttpRequest
+import com.hibegin.http.server.api.HttpResponse
+import com.hibegin.http.server.config.ServerConfig
+import com.hibegin.http.server.util.StatusCodeUtil
+import com.hibegin.http.server.web.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.Headers
-import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.io.OutputStreamWriter
-import java.net.InetSocketAddress
 import java.nio.charset.Charset
 
 
 object ProxyServer {
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private const val partSize = 1024 * 1024 * 1
-    private var port = 0
-    private var httpServer: HttpServer? = null
+    private var port = 12345
+    private var httpServer: SimpleWebServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
     fun stop() {
-        httpServer?.stop(1_000)
+        httpServer?.destroy()
     }
 
     fun start() {
 
 
         try {
-            httpServer = HttpServer.create(InetSocketAddress(port), 100);
-            httpServer?.createContext("/") { httpExchange ->
-                run {
-                    httpExchange.sendResponseHeaders(200, "server running  ".length.toLong());
+            val serverConfig = ServerConfig()
+            serverConfig.port = port
+            serverConfig.router.addMapper("/proxy", ProxyController::class.java)
+            val builder = WebServerBuilder.Builder().serverConfig(serverConfig).build()
 
-                    val os = httpExchange.responseBody
-                    val writer = OutputStreamWriter(os, Charset.defaultCharset())
-                    writer.write("server running  ")
-                    writer.close()
-                    os.close()
-                    httpExchange.close()
-                }
-            }
-            httpServer?.createContext("/proxy") { httpExchange ->
-                run {
-                    val params = queryToMap(httpExchange.requestURI.query)
-
-                    val url = Util.base64Decode(params?.get("url"))
-                    val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                        Util.base64Decode(params?.get("headers")), MutableMap::class.java
-                    )
-                    CoroutineScope(Dispatchers.IO).launch {
-                        proxyAsync(
-                            url, header, httpExchange
-                        )
-                    }
-
-                }
-            }
-            httpServer?.executor = null;
-
-            httpServer?.start();
+            builder.startWithThread()
+            httpServer = builder.webServer
 
 
         } catch (e: Exception) {
             SpiderDebug.log("start server e:" + e.message)
             e.printStackTrace()
 
-            httpServer?.stop(1000)
+            httpServer?.destroy()
         }
-        port = httpServer?.address?.port!!
-        SpiderDebug.log("ktorServer start on " + port)
+        SpiderDebug.log("Server start on " + port)
 
     }
 
+    class ProxyController : Controller() {
+        fun index() {
+
+            val url = Util.base64Decode(getRequest().getParaToStr("url"))
+            val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
+                Util.base64Decode(getRequest().getParaToStr("headers")), MutableMap::class.java
+            )
+            CoroutineScope(Dispatchers.IO).launch {
+                proxyAsync(
+                    url, header, getRequest(), getResponse()
+                )
+            }
+        }
+    }
+
     private suspend fun proxyAsync(
-        url: String, headers: Map<String, String>, httpExchange: HttpExchange
+        url: String, headers: Map<String, String>, request: HttpRequest, response: HttpResponse
     ) {
         val channels = List(THREAD_NUM) { Channel<ByteArray>() }
-        val outputStream = httpExchange.responseBody
-
-        val bufferedOutputStream = BufferedOutputStream(outputStream)
+        var outputStream = ByteArrayOutputStream()
 
         try {
             SpiderDebug.log("--proxyMultiThread: THREAD_NUM: $THREAD_NUM")
 
 
-            var rangeHeader = httpExchange.requestHeaders.getFirst("Range")
+            var rangeHeader = request.getHeader("Range")
             //没有range头
             if (rangeHeader.isNullOrEmpty()) {
                 // 处理初始请求
@@ -118,15 +106,22 @@ object ProxyServer {
             SpiderDebug.log("contentLength: $contentLength")
             val finalEndPoint = if (endPoint == -1L) contentLength - 1 else endPoint
 
-            httpExchange.responseHeaders.apply {
-                set("Connection", "keep-alive")
-                set("Content-Length", (finalEndPoint - startPoint + 1).toString())
-                set("Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength")
-                set("Content-Type", info["Content-Type"]?.get(0))
-            }
-            httpExchange.sendResponseHeaders(206, 0)
 
-            // 使用流式响应
+            response.addHeader("Connection", "keep-alive")
+            response.addHeader("Content-Length", (finalEndPoint - startPoint + 1).toString())
+            response.addHeader("Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength")
+            response.addHeader("Content-Type", info["Content-Type"]?.get(0))
+            val statusCode = 206
+            val sb = StringBuilder();
+            sb.append(request.httpVersion.value).append(" ").append(statusCode).append(" ")
+                .append(StatusCodeUtil.getStatusCodeDesc(statusCode)).append("\r\n")
+            for ((key, value) in response.header) {
+                sb.append(key).append(": ").append(value).append("\r\n")
+            }
+            sb.append("\r\n")
+            outputStream.write(sb.toString().toByteArray(Charset.defaultCharset()))
+            outputStream.flush()
+            response.send(outputStream, false)
 
             var currentStart = startPoint
 
@@ -141,7 +136,9 @@ object ProxyServer {
 
                 for (i in 0 until THREAD_NUM) {
 
-                    if (currentStart > finalEndPoint) break
+                    if (currentStart > finalEndPoint) {
+                        break
+                    }
                     val chunkStart = currentStart
                     val chunkEnd = minOf(currentStart + partSize - 1, finalEndPoint)
                     producerJob += CoroutineScope(Dispatchers.IO).launch {
@@ -156,24 +153,27 @@ object ProxyServer {
 
                     val data = channels[index].receive()
                     SpiderDebug.log("Received chunk: ${data.size} bytes")
+                    outputStream = ByteArrayOutputStream();
+                    outputStream.write(data);
+                    outputStream.flush()
 
-                    bufferedOutputStream.write(data)
-                    bufferedOutputStream.flush()
+                    response.send(outputStream, false)
+                    // bufferedOutputStream.close()
+
 
                 }
 
             }
+
+            response.send(ByteArrayOutputStream(), true)
         } catch (e: Exception) {
             SpiderDebug.log("error: ${e.message}")
 
-            outputStream.write("error: ${e.message}".toByteArray())
+            e.printStackTrace()
 
         } finally {
             channels.forEach { it.close() }
-            bufferedOutputStream.close()
-            outputStream.close()
 
-            httpExchange.close()
         }
     }
 
