@@ -68,8 +68,13 @@
 
 # Please add these rules to your existing keep rules in order to suppress warnings.
 # This is generated automatically by the Android Gradle plugin.
--dontwarn java.lang.management.ManagementFactory
--dontwarn java.lang.management.RuntimeMXBean
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn org.ietf.jgss.ChannelBinding
+-dontwarn org.ietf.jgss.MessageProp
+-dontwarn org.ietf.jgss.Oid
+-dontwarn sun.reflect.CallerSensitive
+-dontwarn sun.reflect.Reflection
 
 -keepattributes SourceFile,LineNumberTable
 
