@@ -4,19 +4,8 @@ package com.github.catvod.utils
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.google.gson.Gson
-import com.hibegin.http.server.SimpleWebServer
-import com.hibegin.http.server.WebServerBuilder
-import com.hibegin.http.server.api.HttpRequest
-import com.hibegin.http.server.api.HttpResponse
-import com.hibegin.http.server.config.ServerConfig
-import com.hibegin.http.server.util.StatusCodeUtil
-import com.hibegin.http.server.web.Controller
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
+import klite.Server
+import java.net.InetSocketAddress
 import java.nio.charset.Charset
 
 
@@ -24,37 +13,34 @@ object ProxyServer {
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private const val partSize = 1024 * 1024 * 1
     private var port = 12345
-    private var httpServer: SimpleWebServer? = null
+
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
     fun stop() {
-        httpServer?.destroy()
+       stop()
     }
 
     fun start() {
 
 
         try {
-            val serverConfig = ServerConfig()
-            serverConfig.port = port
-            serverConfig.router.addMapper("/proxy", ProxyController::class.java)
-            val builder = WebServerBuilder.Builder().serverConfig(serverConfig).build()
-
-            builder.startWithThread()
-            httpServer = builder.webServer
-
-
+            Server(InetSocketAddress(port)).apply {
+                context("/api") {
+                    get("/hello") { "Hello, world!" }
+                }
+                start()
+            }
         } catch (e: Exception) {
             SpiderDebug.log("start server e:" + e.message)
             e.printStackTrace()
 
-            httpServer?.destroy()
+            stop()
         }
         SpiderDebug.log("Server start on " + port)
 
     }
 
-    class ProxyController : Controller() {
+    /*class ProxyController : Controller() {
         fun index() {
 
             val url = Util.base64Decode(getRequest().getParaToStr("url"))
@@ -176,7 +162,7 @@ object ProxyServer {
 
         }
     }
-
+*/
     private fun queryToMap(query: String?): Map<String, String>? {
         if (query == null) {
             return null

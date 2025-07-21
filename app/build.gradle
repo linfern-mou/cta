@@ -88,7 +88,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.sun.net.httpserver/http
 
    // implementation("com.sun.net.httpserver:http:20070405")
-    implementation("com.hibegin:simplewebserver:0.1.15")
+  //  implementation("com.hibegin:simplewebserver:0.1.15")
+    implementation("com.github.codeborne.klite:klite-server:1.7.0")
+
 
     //implementation 'wang.harlon.quickjs:wrapper-java:1.0.0'
     // implementation(ext: 'aar', name: 'quickjs', group: 'fongmi', version: 'release')
