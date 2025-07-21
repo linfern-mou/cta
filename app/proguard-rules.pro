@@ -59,7 +59,7 @@
 # to ignore warnings coming from slf4j and logback
 
 
-
+-assumenosideeffects class com.hibegin.common.util.LoggerUtil {*;}
 
 # Please add these rules to your existing keep rules in order to suppress warnings.
 # This is generated automatically by the Android Gradle plugin.
