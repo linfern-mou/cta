@@ -73,7 +73,7 @@
 
 -keepattributes SourceFile,LineNumberTable
 
-
+-assumenosideeffects class org.slf4j.Logger{*;}
 
 
 
