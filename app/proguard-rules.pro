@@ -75,11 +75,21 @@
 -dontwarn org.ietf.jgss.Oid
 -dontwarn sun.reflect.CallerSensitive
 -dontwarn sun.reflect.Reflection
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn javax.security.auth.kerberos.KeyTab
+-dontwarn sun.net.util.URLUtil
+-dontwarn sun.net.www.ParseUtil
+-dontwarn sun.nio.ByteBuffered
+-dontwarn sun.nio.ch.Interruptible
+-dontwarn sun.reflect.ConstantPool
+-dontwarn sun.reflect.annotation.AnnotationType
+-dontwarn sun.usagetracker.UsageTrackerClient
 
 -keepattributes SourceFile,LineNumberTable
 
 -assumenosideeffects class org.slf4j.Logger{*;}
-
+-keep class sun.misc.** { *; }
 
 
 # 禁用代码混淆
