@@ -58,15 +58,9 @@
 # Logback (Custom rules, see https://github.com/krschultz/android-proguard-snippets/blob/master/libraries/proguard-logback-android.pro)
 # to ignore warnings coming from slf4j and logback
 
-# Remove slf4j log
--assumenosideeffects class * implements java.util.logging.Logger {
-    public *** log(...);
 
-}
 
--assumenosideeffects class  com.hibegin.common.util.LoggerUtil {
-    getLogger(...);
-}
+
 # Please add these rules to your existing keep rules in order to suppress warnings.
 # This is generated automatically by the Android Gradle plugin.
 -dontwarn java.lang.management.ManagementFactory
