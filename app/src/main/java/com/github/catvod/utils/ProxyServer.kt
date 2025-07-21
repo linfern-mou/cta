@@ -113,8 +113,8 @@ object ProxyServer {
             response.addHeader("Content-Type", info["Content-Type"]?.get(0))
             val statusCode = 206
             val sb = StringBuilder();
-            sb.append(request.httpVersion.value).append(" ").append(statusCode).append(" ")
-                .append(StatusCodeUtil.getStatusCodeDesc(statusCode)).append("\r\n")
+            sb.append("HTTP/1.1 ").append(" ").append(statusCode).append(" ")
+                .append(StatusCodeUtil.getStatusCode(statusCode)).append("\r\n")
             for ((key, value) in response.header) {
                 sb.append(key).append(": ").append(value).append("\r\n")
             }

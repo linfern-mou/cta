@@ -67,11 +67,11 @@
 -assumenosideeffects class  com.hibegin.common.util.LoggerUtil {
     getLogger(...);
 }
--assumenosideeffects class * {
-    private static final java.util.logging.Logger LOGGER ;
-}
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn java.lang.management.RuntimeMXBean
 
--keep class androidx.core.view.accessibility.** { *; }
 -keepattributes SourceFile,LineNumberTable
 
 
