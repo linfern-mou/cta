@@ -59,12 +59,9 @@
 # to ignore warnings coming from slf4j and logback
 
 # Remove slf4j log
--assumenosideeffects class * implements org.slf4j.Logger {
-    public *** trace(...);
-    public *** debug(...);
-    public *** info(...);
-    public *** warn(...);
-    public *** error(...);
+-assumenosideeffects class * implements java.util.logging.Logger {
+    public *** log(...);
+
 }
 
 -assumenosideeffects class * implements org.slf4j.LoggerFactory {
