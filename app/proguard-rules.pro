@@ -64,7 +64,7 @@
 
 }
 
--assumenosideeffects class * implements org.slf4j.LoggerFactory {
+-assumenosideeffects class * implements com.hibegin.common.util.LoggerUtil {
     public *** getLogger(...);
 }
 
