@@ -28,14 +28,14 @@ object ProxyServer {
 
         try {
             httpServer = AdvancedHttpServer(port)
-            httpServer!!.addRoutes("/") { _, response ->
+            httpServer?.addRoutes("/") { _, response ->
                 run {
                     response.setContentType("text/html")
                     response.start()
                     response.write("Hello, world!")
                 }
             };
-            httpServer!!.addRoutes("/proxy") { req, response ->
+            httpServer?.addRoutes("/proxy") { req, response ->
                 run {
                     val url = Util.base64Decode(req.queryParams["url"])
                     val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
@@ -44,7 +44,7 @@ object ProxyServer {
                     proxyAsync(url, header, req, response)
                 }
             }
-            httpServer!!.start()
+            httpServer?.start()
 
         } catch (e: Exception) {
             SpiderDebug.log("start server e:" + e.message)
