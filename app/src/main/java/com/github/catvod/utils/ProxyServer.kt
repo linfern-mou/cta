@@ -163,7 +163,7 @@ object ProxyServer {
                 response.write("proxyAsync error: ${e.message}")
 
             } finally {
-                channels.forEach { it.close() }
+               // channels.forEach { it.close() }
 
             }
         }
