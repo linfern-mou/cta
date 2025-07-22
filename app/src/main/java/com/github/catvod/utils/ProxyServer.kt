@@ -25,35 +25,36 @@ object ProxyServer {
 
     fun start() {
 
+        do {
+            try {
+                httpServer = AdvancedHttpServer(port)
+                httpServer?.addRoutes("/") { _, response ->
+                    run {
+                        response.setContentType("text/html")
+                        response.start()
+                        response.write("Hello, world!")
+                    }
+                };
+                httpServer?.addRoutes("/proxy") { req, response ->
+                    run {
+                        val url = Util.base64Decode(req.queryParams["url"])
+                        val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
+                            Util.base64Decode(req.queryParams["headers"]), MutableMap::class.java
+                        )
+                        proxyAsync(url, header, req, response)
+                    }
+                }
+                httpServer?.start()
 
-        try {
-            httpServer = AdvancedHttpServer(port)
-            httpServer?.addRoutes("/") { _, response ->
-                run {
-                    response.setContentType("text/html")
-                    response.start()
-                    response.write("Hello, world!")
-                }
-            };
-            httpServer?.addRoutes("/proxy") { req, response ->
-                run {
-                    val url = Util.base64Decode(req.queryParams["url"])
-                    val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                        Util.base64Decode(req.queryParams["headers"]), MutableMap::class.java
-                    )
-                    proxyAsync(url, header, req, response)
-                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                SpiderDebug.log("启动服务出错:" + e.message)
+
+                port++
+                httpServer?.stop()
             }
-            httpServer?.start()
-
-        } catch (e: Exception) {
-            SpiderDebug.log("start server e:" + e.message)
-            e.printStackTrace()
-
-            httpServer?.stop()
-        }
-
-        SpiderDebug.log("Server start on $port")
+        } while (port < 20000)
+        SpiderDebug.log("启动服务 on $port")
 
     }
 
@@ -101,7 +102,9 @@ object ProxyServer {
 
 
                 response.setHeader("Connection", "keep-alive")
-                response.setHeader("Content-Length", (finalEndPoint - startPoint + 1).toString())
+                response.setHeader(
+                    "Content-Length", (finalEndPoint - startPoint + 1).toString()
+                )
                 response.setHeader(
                     "Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength"
                 )

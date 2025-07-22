@@ -42,9 +42,11 @@ public class Init {
 
     public static void init(Context context) {
         get().app = ((Application) context);
-        SpiderDebug.log("自定義爬蟲代碼載入成功！"+"1");
-        ProxyServer.INSTANCE.stop();
-        ProxyServer.INSTANCE.start();
+        SpiderDebug.log("自定義爬蟲代碼載入成功！" + "1");
+        execute(() -> {
+            ProxyServer.INSTANCE.stop();
+            ProxyServer.INSTANCE.start();
+        });
     }
 
     public static void execute(Runnable runnable) {
@@ -63,7 +65,8 @@ public class Init {
         try {
             Activity activity = Init.getActivity();
             if (activity == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-            if (activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) return;
+            if (activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                return;
             activity.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9999);
         } catch (Exception e) {
             e.printStackTrace();
