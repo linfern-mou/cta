@@ -3,16 +3,12 @@ package com.github.catvod.utils
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.google.gson.Gson
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.net.InetSocketAddress
+import kotlinx.coroutines.runBlocking
 import java.nio.charset.Charset
 
 
@@ -20,157 +16,142 @@ object ProxyServer {
     private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
     private const val partSize = 1024 * 1024 * 1
     private var port = 12345
-    private var httpServer: HttpServer? = null
+    private var httpServer: AdvancedHttpServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
     fun stop() {
-        httpServer?.stop(1_000)
+        httpServer?.stop()
     }
 
     fun start() {
 
 
         try {
-            httpServer = HttpServer.create(InetSocketAddress(port), 100);
-            httpServer?.createContext("/") { httpExchange ->
+            httpServer = AdvancedHttpServer(port)
+            httpServer!!.addRoutes("/") { _, response ->
                 run {
-                    httpExchange.sendResponseHeaders(200, "server running  ".length.toLong());
-
-                    val os = httpExchange.responseBody
-                    val writer = OutputStreamWriter(os, Charset.defaultCharset())
-                    writer.write("server running  ")
-                    writer.close()
-                    os.close()
-                    httpExchange.close()
+                    response.setContentType("text/html")
+                    response.start()
+                    response.write("Hello, world!")
                 }
-            }
-            httpServer?.createContext("/proxy") { httpExchange ->
+            };
+            httpServer!!.addRoutes("/proxy") { req, response ->
                 run {
-                    val params = queryToMap(httpExchange.requestURI.query)
-
-                    val url = Util.base64Decode(params?.get("url"))
+                    val url = Util.base64Decode(req.queryParams["url"])
                     val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                        Util.base64Decode(params?.get("headers")), MutableMap::class.java
+                        Util.base64Decode(req.queryParams["headers"]), MutableMap::class.java
                     )
-                    CoroutineScope(Dispatchers.IO).launch {
-                        proxyAsync(
-                            url, header, httpExchange
-                        )
-                    }
-
+                    proxyAsync(url, header, req, response)
                 }
             }
-            httpServer?.executor = null;
-
-            httpServer?.start();
-
+            httpServer!!.start()
 
         } catch (e: Exception) {
             SpiderDebug.log("start server e:" + e.message)
             e.printStackTrace()
 
-            httpServer?.stop(1000)
+            httpServer?.stop()
         }
-        port = httpServer?.address?.port!!
-        SpiderDebug.log("ktorServer start on " + port)
+
+        SpiderDebug.log("Server start on $port")
 
     }
 
-    private suspend fun proxyAsync(
-        url: String, headers: Map<String, String>, httpExchange: HttpExchange
+    private fun proxyAsync(
+        url: String,
+        headers: Map<String, String>,
+        request: AdvancedHttpServer.Request,
+        response: AdvancedHttpServer.Response
     ) {
-        val channels = List(THREAD_NUM) { Channel<ByteArray>() }
-        val outputStream = httpExchange.responseBody
-
-        val bufferedOutputStream = BufferedOutputStream(outputStream)
-
-        try {
-            SpiderDebug.log("--proxyMultiThread: THREAD_NUM: $THREAD_NUM")
+        runBlocking {
+            val channels = List(THREAD_NUM) { Channel<ByteArray>() }
 
 
-            var rangeHeader = httpExchange.requestHeaders.getFirst("Range")
-            //没有range头
-            if (rangeHeader.isNullOrEmpty()) {
-                // 处理初始请求
-                rangeHeader = "bytes=0-"
-            }
-            headers.toMutableMap().apply {
-                put("Range", rangeHeader)
-            }
-
-            // 解析范围请求
-            val (startPoint, endPoint) = parseRangePoint(
-                rangeHeader
-            )
-
-            //缓存response header
-            var info = infos[url]
-            if (info == null) {
-                info = getInfo(url, headers)
-                infos[url] = info
-            }
-
-            SpiderDebug.log("startPoint: $startPoint; endPoint: $endPoint")
-            val contentLength = getContentLength(info)
-            SpiderDebug.log("contentLength: $contentLength")
-            val finalEndPoint = if (endPoint == -1L) contentLength - 1 else endPoint
-
-            httpExchange.responseHeaders.apply {
-                set("Connection", "keep-alive")
-                set("Content-Length", (finalEndPoint - startPoint + 1).toString())
-                set("Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength")
-                set("Content-Type", info["Content-Type"]?.get(0))
-            }
-            httpExchange.sendResponseHeaders(206, 0)
-
-            // 使用流式响应
-
-            var currentStart = startPoint
+            try {
+                SpiderDebug.log("--proxyMultiThread: THREAD_NUM: $THREAD_NUM")
 
 
-            // 启动生产者协程下载数据
+                var rangeHeader = request.headers["Range"]
+                //没有range头
+                if (rangeHeader.isNullOrEmpty()) {
+                    // 处理初始请求
+                    rangeHeader = "bytes=0-"
+                }
+                headers.toMutableMap().apply {
+                    put("Range", rangeHeader)
+                }
 
-            val producerJob = mutableListOf<Job>()
+                // 解析范围请求
+                val (startPoint, endPoint) = parseRangePoint(
+                    rangeHeader
+                )
 
-            while (currentStart <= finalEndPoint) {
-                producerJob.clear()
-                // 创建通道用于接收数据块
+                //缓存response header
+                var info = infos[url]
+                if (info == null) {
+                    info = getInfo(url, headers)
+                    infos[url] = info
+                }
 
-                for (i in 0 until THREAD_NUM) {
+                SpiderDebug.log("startPoint: $startPoint; endPoint: $endPoint")
+                val contentLength = getContentLength(info)
+                SpiderDebug.log("contentLength: $contentLength")
+                val finalEndPoint = if (endPoint == -1L) contentLength - 1 else endPoint
+                response.setContentType("text/html")
 
-                    if (currentStart > finalEndPoint) break
-                    val chunkStart = currentStart
-                    val chunkEnd = minOf(currentStart + partSize - 1, finalEndPoint)
-                    producerJob += CoroutineScope(Dispatchers.IO).launch {
-                        // 异步下载数据块
-                        val data = getVideoStream(chunkStart, chunkEnd, url, headers)
-                        channels[i].send(data)
 
+                response.setHeader("Connection", "keep-alive")
+                response.setHeader("Content-Length", (finalEndPoint - startPoint + 1).toString())
+                response.setHeader(
+                    "Content-Range", "bytes $startPoint-$finalEndPoint/$contentLength"
+                )
+                info["Content-Type"]?.get(0)?.let { response.setHeader("Content-Type", it) }
+
+                response.setStatusCode(206)
+                response.start()
+                // 使用流式响应
+
+                var currentStart = startPoint
+
+
+                // 启动生产者协程下载数据
+
+                val producerJob = mutableListOf<Job>()
+
+                while (currentStart <= finalEndPoint) {
+                    producerJob.clear()
+                    // 创建通道用于接收数据块
+
+                    for (i in 0 until THREAD_NUM) {
+
+                        if (currentStart > finalEndPoint) break
+                        val chunkStart = currentStart
+                        val chunkEnd = minOf(currentStart + partSize - 1, finalEndPoint)
+                        producerJob += CoroutineScope(Dispatchers.IO).launch {
+                            // 异步下载数据块
+                            val data = getVideoStream(chunkStart, chunkEnd, url, headers)
+                            channels[i].send(data)
+
+                        }
+                        currentStart = chunkEnd + 1
                     }
-                    currentStart = chunkEnd + 1
-                }
-                for ((index, _) in producerJob.withIndex()) {
+                    for ((index, _) in producerJob.withIndex()) {
 
-                    val data = channels[index].receive()
-                    SpiderDebug.log("Received chunk: ${data.size} bytes")
-
-                    bufferedOutputStream.write(data)
-                    bufferedOutputStream.flush()
+                        val data = channels[index].receive()
+                        SpiderDebug.log("Received chunk: ${data.size} bytes")
+                        response.write(data)
+                    }
 
                 }
+            } catch (e: Exception) {
+                SpiderDebug.log("proxyAsync error: ${e.message}")
+                e.printStackTrace()
+                response.write("proxyAsync error: ${e.message}")
+
+            } finally {
+                channels.forEach { it.close() }
 
             }
-        } catch (e: Exception) {
-            SpiderDebug.log("error: ${e.message}")
-
-            outputStream.write("error: ${e.message}".toByteArray())
-
-        } finally {
-            channels.forEach { it.close() }
-            bufferedOutputStream.close()
-            outputStream.close()
-
-            httpExchange.close()
         }
     }
 
