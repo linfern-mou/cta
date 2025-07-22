@@ -158,6 +158,7 @@ object ProxyServer {
                     }
 
                 }
+                channels.forEach { it.close() }
             } catch (e: Exception) {
                 SpiderDebug.log("proxyAsync error: ${e.message}")
                 e.printStackTrace()
@@ -232,7 +233,7 @@ object ProxyServer {
                 Charset.defaultCharset()
             )
         )
-        return "http://127.0.0.1:$port/proxy?key=$urlBase64&headers=$headerBase64"
+        return "http://127.0.0.1:$port/proxy?url=$urlBase64&headers=$headerBase64"
     }
 
 
