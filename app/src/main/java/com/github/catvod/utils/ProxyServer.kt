@@ -2,14 +2,12 @@ package com.github.catvod.utils
 
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
-import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.nio.charset.Charset
 
 
 object ProxyServer {
@@ -18,6 +16,8 @@ object ProxyServer {
     private var port = 12345
     private var httpServer: AdvancedHttpServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
+    private val urlMap = mutableMapOf<String, String>();
+    private val headerMap = mutableMapOf<String, Map<String, String>>();
 
 
     fun stop() {
@@ -38,21 +38,13 @@ object ProxyServer {
                 };
                 httpServer?.addRoutes("/proxy") { req, response ->
                     run {
-                        var url = req.queryParams["url"];
-                        val headers = req.queryParams["headers"];
-                        SpiderDebug.log("url:  $url")
-                        SpiderDebug.log("headers:  $headers")
-                        url = String(
-                            org.apache.commons.codec.binary.Base64().decode(url),
-                            Charset.forName("UTF-8")
-                        )
-                        val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                            String(
-                                org.apache.commons.codec.binary.Base64().decode(headers),
-                                Charset.forName("UTF-8")
-                            ), MutableMap::class.java
-                        )
-                        proxyAsync(url, header, req, response)
+                        val key = req.queryParams["key"];
+                        val url = urlMap[key]
+                        val header = headerMap[key]
+
+                        if (url != null && header != null) {
+                            proxyAsync(url, header, req, response)
+                        }
                     }
                 }
                 httpServer?.start()
@@ -197,7 +189,7 @@ object ProxyServer {
         return start to end
     }
 
-    fun getInfo(
+    private fun getInfo(
         url: String?, headers: Map<String, String>
     ): MutableMap<String, MutableList<String>> {
         val newHeaders: MutableMap<String, String> = java.util.HashMap(headers)
@@ -226,14 +218,13 @@ object ProxyServer {
     }
 
     fun buildProxyUrl(url: String, headers: Map<String, String>): String {
-        val urlBase64 = org.apache.commons.codec.binary.Base64()
-            .encodeToString(url.toByteArray(Charset.defaultCharset()))
-        val headerBase64 = org.apache.commons.codec.binary.Base64().encodeToString(
-            Json.toJson(headers).toByteArray(
-                Charset.defaultCharset()
-            )
-        )
-        return "http://127.0.0.1:$port/proxy?url=$urlBase64&headers=$headerBase64"
+        urlMap.clear()
+        headerMap.clear()
+        val key = Util.MD5(url)
+        urlMap[key] = url
+        headerMap[key] = headers
+
+        return "http://127.0.0.1:$port/proxy?key=$key"
     }
 
 
