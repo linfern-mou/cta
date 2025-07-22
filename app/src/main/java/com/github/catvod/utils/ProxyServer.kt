@@ -19,6 +19,7 @@ object ProxyServer {
     private var httpServer: AdvancedHttpServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
 
+
     fun stop() {
         httpServer?.stop()
     }
@@ -163,7 +164,7 @@ object ProxyServer {
                 response.write("proxyAsync error: ${e.message}")
 
             } finally {
-               // channels.forEach { it.close() }
+                // channels.forEach { it.close() }
 
             }
         }
@@ -224,19 +225,14 @@ object ProxyServer {
     }
 
     fun buildProxyUrl(url: String, headers: Map<String, String>): String {
-
-        return "http://127.0.0.1:$port/proxy?url=${
-            org.apache.commons.codec.binary.Base64()
-                .encodeToString(url.toByteArray(Charset.defaultCharset()))
-        }&headers=${
-            org.apache.commons.codec.binary.Base64().encodeToString(
-                Json.toJson(headers).toByteArray(
-                    Charset.defaultCharset()
-                )
+        val urlBase64 = org.apache.commons.codec.binary.Base64()
+            .encodeToString(url.toByteArray(Charset.defaultCharset()))
+        val headerBase64 = org.apache.commons.codec.binary.Base64().encodeToString(
+            Json.toJson(headers).toByteArray(
+                Charset.defaultCharset()
             )
-
-
-        }"
+        )
+        return "http://127.0.0.1:$port/proxy?key=$urlBase64&headers=$headerBase64"
     }
 
 
