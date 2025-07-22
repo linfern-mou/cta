@@ -56,6 +56,7 @@ class AdvancedHttpServer(private val port: Int) {
 
             // 解析路径和查询参数
             val (basePath, queryParams) = parsePath(path)
+            SpiderDebug.log("请求路径: $basePath, 查询参数: $queryParams")
 
             // 读取请求头
             val headers = mutableMapOf<String, String>()

@@ -66,7 +66,8 @@ object ProxyServer {
     ) {
         runBlocking {
             val channels = List(THREAD_NUM) { Channel<ByteArray>() }
-
+            SpiderDebug.log("--proxyAsync url:  $url")
+            SpiderDebug.log("--proxyAsync headers:  ${Json.toJson(headers)}")
 
             try {
                 SpiderDebug.log("--proxyMultiThread: THREAD_NUM: $THREAD_NUM")
