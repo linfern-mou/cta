@@ -13,7 +13,7 @@ import java.nio.charset.Charset
 
 
 object ProxyServer {
-    private val THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2
+    private val THREAD_NUM = 8//Runtime.getRuntime().availableProcessors() * 2
     private const val partSize = 1024 * 1024 * 1
     private var port = 12345
     private var httpServer: AdvancedHttpServer? = null
