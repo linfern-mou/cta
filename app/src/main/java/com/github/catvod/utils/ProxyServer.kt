@@ -41,9 +41,15 @@ object ProxyServer {
                         val headers = req.queryParams["headers"];
                         SpiderDebug.log("url:  $url")
                         SpiderDebug.log("headers:  $headers")
-                        url = Util.base64Decode(url)
+                        url = String(
+                            org.apache.commons.codec.binary.Base64().decode(url),
+                            Charset.forName("UTF-8")
+                        )
                         val header: Map<String, String> = Gson().fromJson<Map<String, String>>(
-                            Util.base64Decode(headers), MutableMap::class.java
+                            String(
+                                org.apache.commons.codec.binary.Base64().decode(headers),
+                                Charset.forName("UTF-8")
+                            ), MutableMap::class.java
                         )
                         proxyAsync(url, header, req, response)
                     }
@@ -218,12 +224,18 @@ object ProxyServer {
     }
 
     fun buildProxyUrl(url: String, headers: Map<String, String>): String {
-        return "http://127.0.0.1:$port/proxy?url=${Util.base64Encode(url.toByteArray(Charset.defaultCharset()))}&headers=${
-            Util.base64Encode(
+
+        return "http://127.0.0.1:$port/proxy?url=${
+            org.apache.commons.codec.binary.Base64()
+                .encodeToString(url.toByteArray(Charset.defaultCharset()))
+        }&headers=${
+            org.apache.commons.codec.binary.Base64().encodeToString(
                 Json.toJson(headers).toByteArray(
                     Charset.defaultCharset()
                 )
             )
+
+
         }"
     }
 
