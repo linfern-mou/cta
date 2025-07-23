@@ -392,7 +392,7 @@ public class QuarkApi {
 
     public List<String> getPlayFormatList() {
         if (this.isVip) {
-            return Arrays.asList("4K", "超清", "高清", "普画");
+            return Arrays.asList("4K"/*, "超清", "高清", "普画"*/);
         } else {
             return Collections.singletonList("普画");
         }
