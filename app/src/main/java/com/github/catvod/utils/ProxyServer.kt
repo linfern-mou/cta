@@ -11,8 +11,8 @@ import kotlinx.coroutines.runBlocking
 
 
 object ProxyServer {
-    private val THREAD_NUM = 8//Runtime.getRuntime().availableProcessors() * 2
-    private const val partSize = 1024 * 1024 * 1
+    private val THREAD_NUM = Runtime.getRuntime().availableProcessors()
+    private var partSize = 1024 * 1024 * 2
     private var port = 12345
     private var httpServer: AdvancedHttpServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
@@ -104,6 +104,9 @@ object ProxyServer {
                 val finalEndPoint = if (endPoint == -1L) contentLength - 1 else endPoint
                 response.setContentType("text/html")
 
+                if (contentLength > 1024 * 1024 * 500) {
+                    partSize = 1024 * 1024 * 5
+                }
 
                 response.setHeader("Connection", "keep-alive")
                 response.setHeader(
