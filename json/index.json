@@ -1,5 +1,5 @@
 {
-  "spider": "https://wget.la/https://raw.githubusercontent.com/lushunming/AndroidCatVodSpider/bd/jar/custom_spider.jar;md5;851711824c28c744517e650d914bf07d",
+  "spider": "https://andoridspidermt.netlify.app/jar/custom_spider.jar;md5;49c24003ea2a52abb468ad7661ae1730",
   "lives": [
     {
       "name": "电视直播",

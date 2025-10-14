@@ -1,18 +1,18 @@
 package com.github.catvod.api
 
+import com.github.catvod.bean.Result
+import com.github.catvod.bean.Vod
+import com.github.catvod.bean.Vod.VodPlayBuilder
 import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.Json
-import com.github.catvod.utils.ProxyVideo
+import com.github.catvod.utils.ProxyServer.buildProxyUrl
 import com.github.catvod.utils.Util
 import com.github.catvod.utils.Util.MEDIA
 import com.google.gson.JsonObject
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import java.security.MessageDigest
 import java.util.*
 
-class BaiduDrive {
+object BaiduDrive {
+    private val cache = mutableMapOf<String, String>();
 
     private val headers = mapOf(
         "User-Agent" to "Mozilla/5.0 (Linux; Android 12; SM-X800) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Safari/537.36",
@@ -22,41 +22,46 @@ class BaiduDrive {
         "Referer" to "https://pan.baidu.com/"
     )
 
-    private val cookies =
-        "BIDUPSID=D122360716A06862B6689D4FE32053A1; PSTM=1756869077; MAWEBCUID=web_KAGxElHEQyrFImqrzARlkIssFfvhfCLGaXDsxmWKbhxsfEsvhs; PANWEB=1; delPer=0; ZFY=LJHc036:AkCyc1OPqFkXugSCgXnfaMIH:AjDQUOfkXtP4:C; BDRCVFR[uPX25oyLwh6]=mk3SLVN4HKm; BAIDUID_REF=B0FC75130A1A8DF92DC8685381870C9E:FG=1; H_WISE_SIDS_BFESS=110085_656765_660924_665265_666660_667682_662823_668348_668761_668756_669314_667565_669628_669693_669848_669685_669681_670119_670114_670116_670307_669051_670308_670357_670598_669700_670824_669791_669664_670557_667838_669418_663788; MCITY=-276%3A; ZD_ENTRY=baidu; PSINO=5; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; BDRCVFR[S4-dAuiWMmn]=I67x6TjHwwYf0; BA_HECTOR=a0a1a50hakakah242g25a18kah41801kejiv325; BAIDUID=102896B6EA4554BB74C3F8C78B676C7B:FG=1; BAIDUID_BFESS=102896B6EA4554BB74C3F8C78B676C7B:FG=1; H_WISE_SIDS=60273_63141_64007_64982_65120_65190_65227_65246_65254_65273_65280_65310_65361_65368_65417_65457_65451_65510_65543_65572_65596_65620_65599_65636_65476; H_PS_PSSID=60273_63141_64007_64982_65120_65190_65227_65246_65254_65273_65280_65310_65361_65368_65417_65457_65451_65510_65543_65572_65596_65620_65599_65636_65476; csrfToken=6tn2uwGoOUgn87ZBElHEGjCD; newlogin=1; ppfuid=FOCoIC3q5fKa8fgJnwzbE67EJ49BGJeplOzf+4l4EOvDuu2RXBRv6R3A1AZMa49I27C0gDDLrJyxcIIeAeEhD8JYsoLTpBiaCXhLqvzbzmvy3SeAW17tKgNq/Xx+RgOdb8TWCFe62MVrDTY6lMf2GrfqL8c87KLF2qFER3obJGmVXQmqM6seEAgB/LlOs0+zGEimjy3MrXEpSuItnI4KDwxAMUTOS16BfoXMcd2lpC/ZmOvCi7lsE0/UM0w4HSMVhh7EfifsXEYHtGj52zkQan6UDL686lBL6BHUyL9m3lfGgLbz7OSojK1zRbqBESR5Pdk2R9IA3lxxOVzA+Iw1TWLSgWjlFVG9Xmh1+20oPSbrzvDjYtVPmZ+9/6evcXmhcO1Y58MgLozKnaQIaLfWRFwa8A3ZyTRp/cDxRMhYc97xUSUZS0ReZYJMPG6nCsxNJlhI2UyeJA6QroZFMelR7tnTNS/pLMWceus0e757/UMPmrThfasmhDJrMFcBfoSrAAv3LCf1Y7/fHL3PTSf9vid/u2VLX4h1nBtx8EF07eCMhWVv+2qjbPV7ZhXk3reaWRFEeso3s/Kc9n/UXtUfNU1sHiCdbrCW5yYsuSM9SPGDZsl7FhTAKw7qIu38vFZiq+DRc8Vbf7jOiN9xPe0lOdZHUhGHZ82rL5jTCsILwcRVCndrarbwmu7G154MpYiKmTXZkqV7Alo4QZzicdyMbWvwvmR2/m//YVTM8qeZWgDSHjDmtehgLWM45zARbPujeqU0T92Gmgs89l2htrSKITeYE0TpfIvjPXsgyQghyP8U3sViHT1z07gbfu1XO5QQ/upk1AkHGkWrkbMWm+rpwpdImdyxYIjA1uSy2hfTFv/d3cnXH4nh+maaicAPllDgrppZTr0lDf2Vsiy73L8egP9ck5gsaaSE4obz9V1JGvyp8lNw+IyCN2Gou0efGgcYWqtuH+3KMtXW4uAv+XUaBDreXqEwrDxmyUrecavkqQ9rGRChHnhPuJeIKACPXiVuli9ItRLEkdb1mLxNHAk3uJy88YX/Rf/sKUjR12zxRTDxxJNDJS+Dlsbqu3n4I65ujli/3rQ8Zk1MjmTOsz9+kTqOM4upsnQ6IWq/zeZTItMCgHpQhuhr4ip73honuzoJgge1cqWBFYvpabAPTOERTOP1kmx5SXPARX5uxyJzAiNILBC8zh7fGfNXOWV37O9gEbYklWGnWpu55tg8Y8GaT7BFVDtu1KaJzjx51nTN1+xVI8c7otOFm3py1Y+wrt2CfI5v5JSd2kRNZE7s6bQrA5yMI31SfUDgxDrsd6lPtUU=; XFI=627d86b0-a655-11f0-b1eb-0f9d37032cfb; XFCS=B8C411ADE99EE9C3B29FDF31558D538BB636F205DF4F52FE2E57F1312E01079F; XFT=yvSTf+EcMsgYHnGyS774OLqljjYcjil0ZkCgy1g0Aso=; BDUSS=55b2xxaGRqOTdSNE0xVUltZFRRTWdkLXZ0VWtmT2steWw5OHNYUFVDa1FZUkZwSVFBQUFBJCQAAAAAAAAAAAEAAAB0wRMxMTIzNDWwtMqxtPLL4wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDU6WgQ1OloWk; BDUSS_BFESS=55b2xxaGRqOTdSNE0xVUltZFRRTWdkLXZ0VWtmT2steWw5OHNYUFVDa1FZUkZwSVFBQUFBJCQAAAAAAAAAAAEAAAB0wRMxMTIzNDWwtMqxtPLL4wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDU6WgQ1OloWk; STOKEN=987012cdf0b7fd13bbd965b4d1c68f53eac6c0e7d6b4535e6d027f648dd4acae; Hm_lvt_182d6d59474cf78db37e0b2248640ea5=1760154644; Hm_lpvt_182d6d59474cf78db37e0b2248640ea5=1760161311; BDCLND=nGNVyBu9MKpWH7zlTs5oUxFdRQXvai300GnFk9MGb1A%3D; PANPSC=15679126166052069121%3Au9Rut0jYI4qaUfTgVmgBplcS2d9ns3O5C61tf8CKQkineeMhfK4oNnqD0KGUduys6WRWG5ljYM%2BmSRyxE8aegpNZSd%2B1SXYsBm6rqQ5QdYLMOw0WWU7tUSqLe%2F%2Bg%2FDWP4i2i1JdCg%2BQ3uGXWluwqDsVi7NXtJ9t339k3FioH%2FAqA1gqZJvix0rmqJrAOClKcX0r3JWTW68Ah7IX89yGaj0Eyueu6wBwEDZC8PXQ9dy48%2FX4Y2hjenzCvC2qz1EInzo%2F1llKJ4P7gQiGlDEks0p8M%2Flyi7z69BCKhGHn%2Fawh9ff8YI35KVRVksnPVbyr%2FTaFwbj9JM%2FCSsVZaqyA8TA%3D%3D; ndut_fmt=DACA0AD3BE7AF69A4F5690C5C8C96C528423560F2C90164DB3A1486ED8014AB7; ab_sr=1.0.1_Yjg0ZTYxNzc2MjUxNzUyMjMzNWYzNzY0ODA5Y2JhMmMxMjZiNDg2MTcyNjM0NGJiY2NkMzkzMjEzMjM0ZTVhMThlYTU5YzE5M2VkODRiYzFjYTRkY2Q4OGI5OWE3ZjgxMzM4NmRhZTMzNjE2MTc0MWJkYTMyZmE5OWRlNGIyZGI3ZDhkZDU5ZjZmMGNhODFhZWFhZmUzODAwZDVhOGZhMTYyNTgzNjk3OWRlMWNhYjUxYjBmMTQyZDZhMzQ4ZGRh"
-    private val apiHost = "https://pan.baidu.com"
-    private val name = "baidu"
-    private val displayName = listOf("百度原画", "百度转码")
+    private val saveDirName = "TVBOX_BD"
 
-    fun canHandle(url: String): Boolean {
-        return "pan.baidu" in url
+    private var cookies = BaiDuYunHandler.get().token
+
+
+    private val apiHost = "https://pan.baidu.com"
+    private val displayName = listOf("BD原画")
+
+
+    fun setCookie(extend: String) {
+        if (extend.isEmpty()) return
+        cookies = extend
     }
 
-    suspend fun processShareLinks(urls: List<String>): Pair<List<String>, List<String>> {
+    fun processShareLinks(urls: List<String>): Pair<List<String>, List<String>> {
         if (urls.isEmpty()) return emptyList<String>() to emptyList()
 
-        return coroutineScope {
-            val results = urls.map { url ->
-                async { processSingleLink(url) }
-            }.awaitAll()
 
-            val names = mutableListOf<String>()
-            val allVideos = mutableListOf<String>()
-
-            results.forEach { result ->
-                if (result != null) {
-                    val (avideos, videos) = result
-                    names.addAll(displayName)
-                    allVideos.add(avideos.joinToString("#"))
-                    allVideos.add(videos.joinToString("#"))
-                }
-            }
-
-            names to allVideos
+        val results = urls.map { url ->
+            processSingleLink(url)
         }
+
+        val names = mutableListOf<String>()
+        val allVideos = mutableListOf<String>()
+
+        results.forEach { result ->
+            if (result != null) {
+                val (avideos, videos) = result
+                names.addAll(displayName)
+                allVideos.add(avideos.joinToString("#"))
+                //allVideos.add(videos.joinToString("#"))
+            }
+        }
+
+        return names to allVideos
+
+
     }
 
-    private suspend fun processSingleLink(url: String): Pair<List<String>, List<String>>? {
+    private fun processSingleLink(url: String): Pair<List<String>, List<String>>? {
         return try {
             val urlInfo = parseShareUrl(url)
             if (urlInfo.containsKey("error")) return null
@@ -71,7 +76,7 @@ class BaiduDrive {
         }
     }
 
-    private suspend fun parseShareUrl(url: String): Map<String, String> {
+    private fun parseShareUrl(url: String): Map<String, String> {
         var lurl = url
         if ("提取码" in url) lurl = url.replace("提取码:", "?pwd=")
 
@@ -114,7 +119,7 @@ class BaiduDrive {
         )
     }
 
-    private suspend fun getAllVideos(tokenInfo: Map<String, String>): Pair<List<String>, List<String>> {
+    private fun getAllVideos(tokenInfo: Map<String, String>): Pair<List<String>, List<String>> {
         val videos = mutableListOf<String>()
         val avideos = mutableListOf<String>()
         val seenFolders = mutableSetOf<String>()
@@ -181,8 +186,8 @@ class BaiduDrive {
                 pendingFolders.clear()
 
                 val results = currentBatch.map { folderInfo ->
-                    coroutineScope { async { getFolderContents(folderInfo) } }
-                }.awaitAll()
+                    getFolderContents(folderInfo)
+                }
 
                 results.forEachIndexed { i, result ->
                     val folderInfo = currentBatch[i]
@@ -327,9 +332,10 @@ class BaiduDrive {
     }
 
 
-    fun getBdUid(): String? {/* if (Cache.get("baidu:uid") != null) {
-             return Cache.get("baidu:uid") as? String
-         }*/
+    fun getBdUid(): String? {
+        if (cache["uid"] != null) {
+            return cache["uid"]
+        }
         val tempHeader = headers.toMutableMap()
         tempHeader.put("Cookie", cookies)
         try {
@@ -349,7 +355,7 @@ class BaiduDrive {
             val uidValue = fields?.get("uid")?.asString
 
             if (uidValue != null) {
-                // Cache.set("baidu:uid", uidValue)
+                cache["uid"] = uidValue
                 return uidValue
             } else {
                 throw Exception("Failed to retrieve UID from Baidu Drive.")
@@ -360,7 +366,7 @@ class BaiduDrive {
         }
     }
 
-    suspend fun _getSign(videoData: JsonObject): Pair<String, String> {
+    fun _getSign(videoData: JsonObject): Pair<String, String> {
         val tempHeader = headers.toMutableMap()
         tempHeader.put("Cookie", cookies)
         val response: String? = OkHttp.string(
@@ -380,7 +386,7 @@ class BaiduDrive {
     }
 
 
-    suspend fun _getDownloadUrl(videoData: JsonObject): String {
+    fun _getDownloadUrl(videoData: JsonObject): String {
         return try {
             var cookie = ""
             val BDCLND = "BDCLND=" + videoData["randsk"].asString
@@ -409,10 +415,15 @@ class BaiduDrive {
                 "Referer" to "https://pan.baidu.com",
                 "Cookie" to cookie
             )
+            // 先清空文件夹在创建文件夹
+
+            _deleteTransferFile("/$saveDirName")
+            //创建路径
+            createSaveDir()
 
 
             val data =
-                "from=${videoData["uk"].asString}&shareid=${videoData["shareid"].asString}&ondup=newcopy&path=/&fsidlist=[${videoData["fid"].asString}]"
+                "from=${videoData["uk"].asString}&shareid=${videoData["shareid"].asString}&ondup=newcopy&path=/${saveDirName}&fsidlist=[${videoData["fid"].asString}]"
 
             var to = ""
             for (i in 1..30) {
@@ -424,8 +435,8 @@ class BaiduDrive {
                 val result = Json.safeObject(response.body)
 
                 try {
-                    to =  (result["extra"].asJsonObject)["list"] .asJsonArray[0].asJsonObject["to"].asString
-                   // videoData["to"] = to
+                    to = (result["extra"].asJsonObject)["list"].asJsonArray[0].asJsonObject["to"].asString
+                    // videoData["to"] = to
                     if (to.isNotEmpty()) {
                         println("成功转存文件到: $to")
                         break
@@ -471,18 +482,18 @@ class BaiduDrive {
         }
     }
 
-    suspend fun     getVideoUrl(videoData: JsonObject): Map<String, Any> {
+    fun getVideoUrl(videoData: JsonObject, flag: String): Map<String, Any> {
         return try {
             val bdUid = getBdUid()
             println("获取百度网盘用户ID: $bdUid")
-            val plist = mutableListOf<Pair<String, String>>()
-            if (videoData["qtype"].asString == "original") {
-                var app = true
+
+            if (flag.contains("原画")) {
+
                 var headersApp = mapOf("User-Agent" to "netdisk;P2SP;2.2.91.136;android-android;")
 
                 var downloadUrl = _getAppDownloadUrl(videoData)
                 if (downloadUrl.isEmpty()) {
-                    app = false
+
                     headersApp = mapOf(
 
                         "User-Agent" to "netdisk;1.4.2;22021211RC;android-android;12;JSbridge4.4.0;jointBridge;1.1.0;"
@@ -491,14 +502,11 @@ class BaiduDrive {
                     downloadUrl = _getDownloadUrl(videoData)
                 }
                 if (downloadUrl.isNotEmpty()) {
-                    plist.add(Pair("原画", ProxyVideo.buildCommonProxyUrl(downloadUrl, headersApp)))
+
                     val result = mapOf(
-                        "parse" to 0, "url" to plist, "header" to headersApp.toString()
+                        "parse" to "0", "url" to downloadUrl, "header" to headersApp
                     )
-                    // 使用线程而不是asyncio任务
-                    Thread {
-                        // _runDeleteInThread(videoData["to"] as? String)
-                    }.start()
+
                     result
                 } else {
                     _handleError
@@ -508,12 +516,11 @@ class BaiduDrive {
                 if (sign.isEmpty() || time.isEmpty()) {
                     return _handleError
                 }
-                val plist = _getPlayList(videoData, sign, time)/* val headers = Headers.build {
-                     append(HttpHeaders.UserAgent, USER_AGENT)
-                     append(HttpHeaders.Cookie, dictToCookieStr(cookies))
-                 }*/
+                val plist = _getPlayList(videoData, sign, time)
+                val tempHeader = headers.toMutableMap()
+                tempHeader.put("Cookie", cookies)
                 mapOf(
-                    "parse" to 0, "url" to plist, "header" to headers.toString()
+                    "parse" to "0", "url" to plist[0], "header" to tempHeader
                 )
             }
         } catch (e: Exception) {
@@ -522,7 +529,7 @@ class BaiduDrive {
         }
     }
 
-    private suspend fun _getAppDownloadUrl(videoData: JsonObject): String {
+    private fun _getAppDownloadUrl(videoData: JsonObject): String {
         return try {
             val headers = mapOf<String, String>(
 
@@ -547,15 +554,21 @@ class BaiduDrive {
                 "time" to t.toString()
             ).toMutableMap()
 
-            val randstr =
-                this.sha1(this.sha1(Util.findByRegex("BDUSS=(.+?);",cookies,1)) + uid + "ebrcUYiuxaZv2XGu7KIYKxUrqfnOfpDF$t${params["devuid"]}11.30.2ae5821440fab5e1a61a025f014bd8972")
+            val randstr = this.sha1(
+                this.sha1(
+                    Util.findByRegex(
+                        "BDUSS=(.+?);", cookies, 1
+                    )
+                ) + uid + "ebrcUYiuxaZv2XGu7KIYKxUrqfnOfpDF$t${params["devuid"]}11.30.2ae5821440fab5e1a61a025f014bd8972"
+            )
 
-            params.put("rand", sha1(randstr))
+            params.put("rand", randstr)
 
             val response = OkHttp.string(
                 "${apiHost}/share/list", params, headers
             )
-
+            val json = Json.safeObject(response)
+            val dlink = json["list"].asJsonArray[0].asJsonObject["dlink"].asString
 
             /* val url = response["data"] as Map<String, Any>
              val list = url["list"] as List<Map<String, Any>>
@@ -570,104 +583,142 @@ class BaiduDrive {
 
              val pUrl = pDataResponse.headers[HttpHeaders.Location]?.toString()
              pUrl ?: dlink*/
-            ""
+            dlink
         } catch (e: Exception) {
             println("获取下载链接失败: ${e.message}")
             ""
         }
     }
 
-    private fun _getPlayList(videoData: JsonObject, sign: String, time: String): List<Pair<String, String>> {
-        val hz = listOf("1080P", "720P", "480P")
-        val plist = mutableListOf<Pair<String, String>>()
+    private fun _getPlayList(videoData: JsonObject, sign: String, time: String): List<String> {
+        val hz = getPlayFormatList()
+        val plist = mutableListOf<String>()
 
         for (quality in hz) {
             val url =
-                ("${apiHost}/share/streaming?" + "uk=${videoData["uk"]}&" + "fid=${videoData["fid"]}&" + "sign=$sign&" + "timestamp=$time&" + "shareid=${videoData["shareid"]}&" + "type=M3U8_AUTO_${
+                ("${apiHost}/share/streaming?" + "uk=${videoData["uk"].asString}&" + "fid=${videoData["fid"].asString}&" + "sign=$sign&" + "timestamp=$time&" + "shareid=${videoData["shareid"].asString}&" + "type=M3U8_AUTO_${
                     quality.replace(
                         "P", ""
                     )
                 }")
-            plist.add(Pair(quality, url))
+            plist.add(url)
         }
 
         return plist
-    }/*
+    }
 
-      private suspend fun _deleteTransferFile(filePath: String) {
-          try {
-              val url = "$API_HOST/api/filemanager"
-              val params = Parameters.build {
-                  append("opera", "delete")
-                  append("clienttype", "1")
-              }
-              val deleteHeaders = Headers.build {
-                  append(HttpHeaders.UserAgent, "Android")
-                  append(HttpHeaders.Connection, CONNECTION)
-                  append(HttpHeaders.AcceptEncoding, "br,gzip")
-                  append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
-                  append(HttpHeaders.AcceptLanguage, ACCEPT_LANGUAGE)
-                  append("charset", CHARSET)
-              }
-              val data = "filelist=[\"$filePath\"]"
+    /**
+     * 创建保存目录
+     */
+    fun createSaveDir(): Long? {
+        var saveDirId: Long? = null
+        // 创建保存目录
+        if (cookies.isEmpty()) {
+            return null
+        }
+        val tempHeader = headers.toMutableMap()
+        tempHeader.put("Cookie", cookies)
+        return try {
+            val listResp = OkHttp.string(
+                "${apiHost}/api/list", mapOf(
+                    "dir" to "/",
+                    "order" to "name",
+                    "desc" to "0",
+                    "showempty" to "0",
+                    "web" to "1",
+                    "app_id" to "250528"
+                ), tempHeader
+            )
+            val json = Json.safeObject(listResp)
 
-              val response: HttpResponse = client.post(url) {
-                  parameters(params)
-                  headers { this@_deleteTransferFile.deleteHeaders.forEach { name, value -> append(name, value) } }
-                  cookies?.let { setCookie(it) }
-                  body = data
-                  timeout.socketTimeoutMillis = 10000
-              }
+            if (json["errno"].asInt != 0) {
+                return null
+            }
 
-              val result = try {
-                  response.receive<Map<String, Any>>()
-              } catch (e: Exception) {
-                  response.readBytes().decodeToString()
-              }
+            val drpyDir = json["list"].asJsonArray.find { item ->
+                item.asJsonObject.get("isdir").asInt == 1 && item.asJsonObject.get("server_filename").asString == saveDirName
 
-              println("删除文件响应: $result")
-              println("响应状态码: ${response.status.value}")
-          } catch (e: Exception) {
-              println("删除文件出错: ${e.message}")
-              e.printStackTrace()
-          }
-      }
+            }
 
-      private suspend fun _delayedDeleteFile(to: String) {
-          try {
-              println("开始延迟删除文件: $to")
-              delay(2000)
-              println("开始执行删除操作: $to")
-              withContext(Dispatchers.IO) {
-                  _deleteTransferFile(to)
-              }
-          } catch (e: Exception) {
-              println("延迟删除文件出错: ${e.message}")
-          }
-      }
+            if (drpyDir != null) {
+                saveDirId = drpyDir.asJsonObject.get("fs_id").asLong
+                return saveDirId
+            }
 
-      private fun _runDeleteInThread(to: String?) {
-          try {
-              println("开始延迟删除文件(线程): $to")
-              Thread.sleep(2000)
-              println("开始执行删除操作(线程): $to")
+            val createResp = OkHttp.post(
+                "${apiHost}/api/create?a=commit&bdstoken=${getBdstoken()}&clienttype=0&app_id=250528&web=1&dp-logid=73131200762376420075",
+                mapOf(
+                    "path" to "//$saveDirName",
+                    "isdir" to "1",
+                    "block_list" to "[]",
 
-              runBlocking {
-                  _deleteTransferFile(to!!)
-              }
-
-              println("删除操作完成: $to")
-          } catch (e: Exception) {
-              println("线程中删除文件出错: ${e.message}")
-              e.printStackTrace()
-          }
-      }
+                    ),
+                tempHeader
+            )
+            val createJson = Json.safeObject(createResp.body)
 
 
 
-      private fun dictToCookieStr(cookieDict: Map<String, String>?): String {
-          return cookieDict?.map { "${it.key}=${it.value}" }?.joinToString("; ") ?: ""
-      }*/
+            saveDirId = createJson["fs_id"].asLong
+            saveDirId
+
+        } catch (e: Exception) {
+            println("创建保存目录失败: ${e.message}")
+            null
+        }
+    }
+
+    fun getBdstoken(): String {
+        if (cache["bdstoken"] != null) {
+            return cache["bdstoken"]!!
+        }
+        val tempHeader = headers.toMutableMap()
+        tempHeader.put("Cookie", cookies)
+        val userInfo = OkHttp.string(
+            "${apiHost}/api/gettemplatevariable?clienttype=0&app_id=250528&web=1&fields=[\"bdstoken\",\"token\",\"uk\",\"isdocuser\",\"servertime\"]",
+            mapOf(),
+            tempHeader
+
+        )
+        val json = Json.safeObject(userInfo)
+
+        val bdstoken: String? = json["result"]?.asJsonObject?.get("bdstoken")?.asString
+        cache["bdstoken"] = bdstoken ?: ""
+        return bdstoken ?: ""
+    }
+
+
+    private fun _deleteTransferFile(filePath: String) {
+        try {
+            val url =
+                "$apiHost/api/filemanager?async=2&onnest=fail&opera=delete&bdstoken=${getBdstoken()}&newVerify=1&clienttype=0&app_id=250528&web=1&dp-logid=39292100213290200076"
+            val params = mapOf(
+                "filelist" to "[\"$filePath\"]"
+            )
+
+            val headers = mutableMapOf(
+                "User-Agent" to "Android",
+                "Connection" to "Keep-Alive",
+                "Accept-Encoding" to "br,gzip",
+                "Content-Type" to "application/x-www-form-urlencoded; charset=utf-8",
+                "Accept-Language" to "zh-CN,zh;q=0.8",
+                "charset" to "UTF-8",
+                "Cookie" to cookies,
+            )
+
+
+            val response = OkHttp.post(url, params, headers)
+
+
+
+            println("删除文件响应: ${response.body}")
+            println("响应状态码: ${response.code}")
+        } catch (e: Exception) {
+            println("删除文件出错: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
 
     private fun unquote(encoded: String): String {
         return encoded.replace("%([0-9A-Fa-f]{2})".toRegex()) { match ->
@@ -676,17 +727,56 @@ class BaiduDrive {
     }
 
     private fun sha1(input: String): String {
-        val bytes = MessageDigest.getInstance("SHA-1").digest(input.toByteArray())
-        return Util.base64Encode(bytes)
+
+        return Util.sha1Hex(input)
     }
 
     private val _handleError = mapOf(
-        "parse" to 1, "msg" to "Error retrieving video URL"
+        "parse" to "1", "msg" to "Error retrieving video URL"
     )
 
-    private fun threadUrl(url: String, threads: Int): String {
-        // Implement the logic for threading URL processing here
-        return url
+
+    fun getVod(shareUrl: String): Vod {
+        val (froms, urls) = processShareLinks(listOf(shareUrl))
+        val builder = VodPlayBuilder()
+        for (i in froms.indices) {
+            val playUrls = mutableListOf<VodPlayBuilder.PlayUrl>();
+            for (url in urls[i].split("#")) {
+                val arr = url.split("$")
+                val play = VodPlayBuilder.PlayUrl()
+                play.name = arr[0]
+                play.url = arr[1]
+
+                playUrls.add(play)
+
+            }
+            builder.append(froms[i], playUrls)
+        }
+        val buildResult = builder.build();
+
+        val vod = Vod()
+        vod.setVodId(shareUrl)
+        vod.setVodPic("")
+        vod.setVodYear("")
+        vod.setVodName("")
+        vod.setVodContent("")
+        vod.setVodPlayFrom(buildResult.vodPlayFrom)
+        vod.setVodPlayUrl(buildResult.vodPlayUrl)
+        return vod
+    }
+
+    fun playerContent(json: JsonObject, flag: String): String {
+        val play = getVideoUrl(json, flag);
+        val header = play["header"] as Map<String, String>
+        return Result.get().url(buildProxyUrl(play["url"] as String, header) ).octet().header(header).string();
+    }
+
+    fun getPlayFormatList(): Array<String> {
+        return listOf("1080P").toTypedArray()
+    }
+
+    fun proxyVideo(params: MutableMap<String, String>): Array<Any> {
+        return emptyList<Any>().toTypedArray()
     }
 
 
