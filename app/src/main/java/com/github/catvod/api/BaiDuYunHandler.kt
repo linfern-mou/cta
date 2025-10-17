@@ -164,10 +164,16 @@ class BaiDuYunHandler private constructor() {
                         SpiderDebug.log("百度登录成功，设置cookie：${bduss}")
                         cookies = "BDUSS=$bduss"
                         cookies = generateCooike(loginResponse.resp["set-cookie"])
-                        cache.setUser(User.objectFrom(this.cookies))
 
-                        //停止检验线程，关闭弹窗
-                        stopService()
+                        if (cookies.isNotEmpty()) {
+                            cache.setUser(User.objectFrom(this.cookies))
+                            //停止检验线程，关闭弹窗
+                            stopService()
+                            Notify.show("百度登录成功")
+
+                        }
+
+
                         mapOf("success" to true, "bduss" to bduss)
                     } else {
                         mapOf("error" to "登录失败: $cleanLoginResponse")
