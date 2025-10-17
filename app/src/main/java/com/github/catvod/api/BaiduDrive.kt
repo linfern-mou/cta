@@ -10,7 +10,6 @@ import com.github.catvod.utils.Util
 import com.github.catvod.utils.Util.MEDIA
 import com.google.gson.JsonObject
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 object BaiduDrive {
     private val cache = mutableMapOf<String, String>();
@@ -39,14 +38,11 @@ object BaiduDrive {
     }
 
     fun processShareLinks(urls: List<String>): Pair<List<String>, List<String>> {
-        val retry = AtomicInteger(3)
+
         //首先确保cookie不为空
-        if (cookies.isEmpty() && retry.get() > 0) {
+        if (cookies.isEmpty()) {
             BaiDuYunHandler.get().startScan()
             cookies = BaiDuYunHandler.get().token
-            Thread.sleep(10000)
-            retry.decrementAndGet()
-            processShareLinks(urls)
         }
         if (urls.isEmpty()) return emptyList<String>() to emptyList()
 
