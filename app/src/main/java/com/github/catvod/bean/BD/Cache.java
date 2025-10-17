@@ -2,7 +2,6 @@ package com.github.catvod.bean.BD;
 
 
 import com.github.catvod.api.BaiDuYunHandler;
-import com.github.catvod.api.YunTokenHandler;
 import com.github.catvod.bean.yun.User;
 import com.github.catvod.spider.Init;
 import com.github.catvod.utils.Path;

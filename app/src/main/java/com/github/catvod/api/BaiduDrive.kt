@@ -22,6 +22,7 @@ object BaiduDrive {
         "Referer" to "https://pan.baidu.com/"
     )
 
+
     private val saveDirName = "TVBOX_BD"
 
     private var cookies = BaiDuYunHandler.get().token
@@ -37,6 +38,11 @@ object BaiduDrive {
     }
 
     fun processShareLinks(urls: List<String>): Pair<List<String>, List<String>> {
+        //首先确保cookie不为空
+        if (cookies.isEmpty()) {
+            BaiDuYunHandler.get().startScan()
+            cookies = BaiDuYunHandler.get().token
+        }
         if (urls.isEmpty()) return emptyList<String>() to emptyList()
 
 
@@ -313,6 +319,7 @@ object BaiduDrive {
         return Json.safeObject(result)
 
     }
+
 
     private fun parseQueryParams(url: String): Map<String, List<String>> {
         val query = url.substringAfter(
@@ -768,7 +775,7 @@ object BaiduDrive {
     fun playerContent(json: JsonObject, flag: String): String {
         val play = getVideoUrl(json, flag);
         val header = play["header"] as Map<String, String>
-        return Result.get().url(buildProxyUrl(play["url"] as String, header) ).octet().header(header).string();
+        return Result.get().url(buildProxyUrl(play["url"] as String, header)).octet().header(header).string();
     }
 
     fun getPlayFormatList(): Array<String> {
