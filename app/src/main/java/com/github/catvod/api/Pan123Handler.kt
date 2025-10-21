@@ -49,12 +49,9 @@ object Pan123Handler {
             passwd = cache!!.user.password
             auth = cache!!.user.cookie
             expire = cache!!.user.expire
-            if (expire == 0L || System.currentTimeMillis() > expire) {
-                SpiderDebug.log("token已过期")
-                startFlow()
-            } else if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(passwd)) {
-                if (StringUtils.isBlank(auth)) {
-                    SpiderDebug.log("userName passwd 不为空,auth 为空")
+            if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(passwd)) {
+                if (StringUtils.isBlank(auth) || expire == 0L || System.currentTimeMillis() > expire) {
+                    SpiderDebug.log("auth 为空或者登录已过期")
                     this.loginWithPassword(userName, passwd)
                 }
             } else {
