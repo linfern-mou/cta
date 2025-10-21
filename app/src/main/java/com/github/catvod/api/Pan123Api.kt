@@ -9,6 +9,7 @@ import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.Json
 import com.github.catvod.utils.ProxyServer.buildProxyUrl
 import com.github.catvod.utils.Util
+import com.google.gson.JsonObject
 import okhttp3.HttpUrl
 import java.util.regex.Pattern
 
@@ -50,7 +51,7 @@ object Pan123Api {
     /**
      * 登录方法
      */
-    fun login(passport: String, password: String): String? {
+    fun login(passport: String, password: String): JsonObject? {
 
         val data = mapOf(
             "passport" to passport, "password" to password, "remember" to true
@@ -82,7 +83,8 @@ object Pan123Api {
                     // setAuth(token)
                     SpiderDebug.log("登录成功")
 
-                    return token
+
+                    return authData.get("data").asJsonObject
                 }
             }
 

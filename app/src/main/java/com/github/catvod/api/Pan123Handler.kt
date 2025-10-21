@@ -27,6 +27,7 @@ object Pan123Handler {
     private var auth = ""
     private var userName = ""
     private var passwd = ""
+    private var expire = 0L;
 
     fun getCache(): File {
         return Path.tv("pan123")
@@ -47,12 +48,15 @@ object Pan123Handler {
             userName = cache!!.user.userName
             passwd = cache!!.user.password
             auth = cache!!.user.cookie
-            if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(passwd)) {
+            expire = cache!!.user.expire
+            if (expire == 0L || System.currentTimeMillis() > expire) {
+                SpiderDebug.log("token已过期")
+                startFlow()
+            } else if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(passwd)) {
                 if (StringUtils.isBlank(auth)) {
                     SpiderDebug.log("userName passwd 不为空,auth 为空")
                     this.loginWithPassword(userName, passwd)
                 }
-
             } else {
                 SpiderDebug.log("userName passwd 为空")
                 startFlow()
@@ -67,13 +71,14 @@ object Pan123Handler {
 
         try {
             //保存的账号密码
-            val auth = login(uname!!, passwd!!)
-            if (StringUtils.isNotBlank(auth)) {
+            val json = login(uname!!, passwd!!)
+            if (json != null) {
                 val user = User()
-                user.cookie = auth
+                user.cookie = json.get("token").asString
                 user.password = passwd
                 user.userName = uname
-                this.auth = auth ?: ""
+                user.expire = json.get("refresh_token_expire_time").asLong * 1000
+                this.auth = json.get("token").asString
                 cache?.setUserInfo(user)
                 Notify.show("123登录成功")
             } else {

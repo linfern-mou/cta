@@ -5,7 +5,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class User {
 
-
+    @SerializedName("expire")
+    private long expire;
     @SerializedName("cookie")
     private String cookie;
 
@@ -38,6 +39,14 @@ public class User {
         this.cookie = cookie;
     }
 
+    public long getExpire() {
+        return expire;
+    }
+
+    public void setExpire(long expire) {
+        this.expire = expire;
+    }
+
     public static User objectFrom(String str) {
         User item = new Gson().fromJson(str, User.class);
         return item == null ? new User() : item;
@@ -48,6 +57,7 @@ public class User {
         this.cookie = "";
         this.userName = "";
         this.password = "";
+        this.expire = 0L;
 
     }
 }
