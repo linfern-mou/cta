@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 
 
 object ProxyServer {
-    private val THREAD_NUM = Runtime.getRuntime().availableProcessors()
+    private const val THREAD_NUM = 16
     private val partSize = 1024 * 1024 * 2
     private var port = 12345
     private var httpServer: AdvancedHttpServer? = null
