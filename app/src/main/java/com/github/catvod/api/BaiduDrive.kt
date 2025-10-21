@@ -9,6 +9,7 @@ import com.github.catvod.utils.ProxyServer.buildProxyUrl
 import com.github.catvod.utils.Util
 import com.github.catvod.utils.Util.MEDIA
 import com.google.gson.JsonObject
+import java.net.URLEncoder
 import java.util.*
 
 object BaiduDrive {
@@ -164,7 +165,7 @@ object BaiduDrive {
                 // 处理items
                 items.forEach { item ->
                     if (item.asJsonObject["isdir"].asInt == 1) {
-                        val folderPath = "/sharelink$uk-$shareid/${item.asJsonObject["server_filename"].asString}"
+                        val folderPath = "/sharelink$uk-${item.asJsonObject["fs_id"].asString}/${item.asJsonObject["server_filename"].asString}"
                         if (folderPath !in seenFolders) {
                             seenFolders.add(folderPath)
                             pendingFolders.add(
@@ -298,7 +299,7 @@ object BaiduDrive {
                 "shareid" to folderInfo["shareid"]!!.toString(),
                 "page" to folderInfo["page"].toString(),
                 "num" to "9999",
-                "dir" to folderInfo["dir"]!!.toString(),
+                "dir" to URLEncoder.encode(folderInfo["dir"]!!.toString()),
                 "desc" to "0",
                 "order" to "name",
             )
