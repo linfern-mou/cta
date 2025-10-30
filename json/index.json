@@ -362,7 +362,34 @@
       "api": "csp_TianYiSo",
       "searchable": 1,
       "timeout": 30
+    },
+    {
+      "key": "local",
+      "name": "Local",
+      "type": 3,
+      "api": "csp_Local",
+      "searchable": 0,
+      "changeable": 0
+    },
+    {
+      "key": "market",
+      "name": "Market",
+      "type": 3,
+      "api": "csp_Market",
+      "searchable": 0,
+      "changeable": 0,
+      "ext": "./market.json"
+    },
+    {
+      "key": "push_agent",
+      "name": "Push",
+      "type": 3,
+      "api": "csp_Push",
+      "searchable": 0,
+      "changeable": 0,
+      "timeout": 60
     }
+
   ],
   "parses": [
     {
