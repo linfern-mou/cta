@@ -82,7 +82,7 @@ object Pan123Api {
                     val token = authData.getAsJsonObject("data").get("token").asString
                     // setAuth(token)
                     SpiderDebug.log("登录成功")
-
+                    authToken=token
 
                     return authData.get("data").asJsonObject
                 }
@@ -121,7 +121,7 @@ object Pan123Api {
             val queryPart = lurl.split("?")[1]
             val pwdMatcher = Regex("[A-Za-z0-9]+").find(queryPart)
             if (pwdMatcher != null) {
-                sharePwd = pwdMatcher.value
+                sharePwd = queryPart.split("=")[1]
             }
         }
 
@@ -268,7 +268,9 @@ object Pan123Api {
         val headers = mapOf(
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
             "Content-Type" to "application/json",
-            "Authorization" to "Bearer ${getAuth()}"
+            "Authorization" to "Bearer ${getAuth()}",
+            "platform" to  "android"
+
         )
 
         try {
