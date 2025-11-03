@@ -3,7 +3,6 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 import com.github.catvod.api.Pan123Api;
-import com.github.catvod.api.TianyiApi;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Json;
@@ -14,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.github.catvod.api.TianyiApi.URL_START;
+import static com.github.catvod.api.TianyiApi.URL_CONTAIN;
 
 /**
  * @author ColaMint & Adam & FongMi
@@ -60,7 +59,7 @@ public class Cloud extends Spider {
             return quark.detailContent(shareUrl);
         } /*else if (shareUrl.get(0).matches(Util.patternUC)) {
             return uc.detailContent(shareUrl);
-        } */ else if (shareUrl.get(0).startsWith(TianyiApi.URL_START)) {
+        } */ else if (shareUrl.get(0).contains(URL_CONTAIN)) {
             return tianYi.detailContent(shareUrl);
         } else if (shareUrl.get(0).contains(YiDongYun.URL_START)) {
             return yiDongYun.detailContent(shareUrl);
@@ -107,7 +106,7 @@ public class Cloud extends Spider {
                 from.add(quark.detailContentVodPlayFrom(List.of(shareLink), i));
             } /*else if (shareLink.matches(Util.patternAli)) {
                 from.add(ali.detailContentVodPlayFrom(List.of(shareLink), i));
-            } */ else if (shareLink.startsWith(URL_START)) {
+            } */ else if (shareLink.contains(URL_CONTAIN)) {
                 from.add(tianYi.detailContentVodPlayFrom(List.of(shareLink), i));
             } else if (shareLink.contains(YiDongYun.URL_START)) {
                 from.add(yiDongYun.detailContentVodPlayFrom(List.of(shareLink), i));
@@ -131,7 +130,7 @@ public class Cloud extends Spider {
                 urls.add(quark.detailContentVodPlayUrl(List.of(shareLink)));
             }/* else if (shareLink.matches(Util.patternAli)) {
                 urls.add(ali.detailContentVodPlayUrl(List.of(shareLink)));
-            } */ else if (shareLink.startsWith(URL_START)) {
+            } */ else if (shareLink.contains(URL_CONTAIN)) {
                 urls.add(tianYi.detailContentVodPlayUrl(List.of(shareLink)));
             } else if (shareLink.contains(YiDongYun.URL_START)) {
                 urls.add(yiDongYun.detailContentVodPlayUrl(List.of(shareLink)));
