@@ -3,6 +3,7 @@ name: Spider Jar Gen CI
 on:
   push:
     branches: [ "multiThread" ]
+  workflow_dispatch:
 
 jobs:
   build:
