@@ -52,7 +52,7 @@ public class QuarkTest {
     @org.junit.Test
     public void playerContent() throws Exception {
 
-        String content = spider.playerContent("quark原画","a04522f504a742db8ebaf69e3b7f50d6++cf35e6096b5be563ed747a4538ceab60++469c2acf8640++lbhatsGLyszqGYVHwO+DJPeyRkwbsCr7JzcoZhPVYBI=",new ArrayList<>());
+        String content = spider.playerContent("quark原画", "a04522f504a742db8ebaf69e3b7f50d6++375807f3f1068a8fdabac127ec4db89f++469c2acf8640++PVTgPNXNtRFDDkE6SAYX4KPSjk9xl449JkTHl6mtu7k=", new ArrayList<>());
         System.out.println("playerContent--" + content);
         JsonObject map = Json.safeObject(content);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
