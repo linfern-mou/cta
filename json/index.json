@@ -147,6 +147,7 @@
       "ext": {
         "api_urls": [
           "https://api.jkai.de/api/search",
+          "https://so.252035.xyz/api/search",
           "https://psweb.banye.tech:7777/api/search",
           "https://so.566987.xyz/api/search",
           "http://152.69.222.142:8088/api/search"
@@ -165,7 +166,7 @@
       "filterable": 0,
       "ext": {
         "api_urls": [
-          "https://api.jkai.de/api/search",
+          "https://api.jkai.de/api/search","https://so.252035.xyz/api/search",
           "https://psweb.banye.tech:7777/api/search",
           "https://so.566987.xyz/api/search",
           "http://152.69.222.142:8088/api/search"
@@ -184,7 +185,7 @@
       "filterable": 0,
       "ext": {
         "api_urls": [
-          "https://api.jkai.de/api/search",
+          "https://api.jkai.de/api/search","https://so.252035.xyz/api/search",
           "https://psweb.banye.tech:7777/api/search",
           "https://so.566987.xyz/api/search",
           "http://152.69.222.142:8088/api/search"
@@ -203,7 +204,7 @@
       "filterable": 0,
       "ext": {
         "api_urls": [
-          "https://api.jkai.de/api/search",
+          "https://api.jkai.de/api/search","https://so.252035.xyz/api/search",
           "https://psweb.banye.tech:7777/api/search",
           "https://so.566987.xyz/api/search",
           "http://152.69.222.142:8088/api/search"
@@ -221,7 +222,7 @@
       "filterable": 0,
       "ext": {
         "api_urls": [
-          "https://api.jkai.de/api/search",
+          "https://api.jkai.de/api/search","https://so.252035.xyz/api/search",
           "https://psweb.banye.tech:7777/api/search",
           "https://so.566987.xyz/api/search",
           "http://152.69.222.142:8088/api/search"
