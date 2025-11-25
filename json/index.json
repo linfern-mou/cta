@@ -67,6 +67,15 @@
       "ext": "{\"site\": [\"https://www.wogg.net/\",\"https://wogg.xxooo.cf/\"]}"
     },
     {
+      "key": "SeedHub",
+      "name": "SeedHub",
+      "type": 3,
+      "api": "csp_SeedHub",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    },
+    {
       "key": "PanTa",
       "name": "盘他|139Pan",
       "type": 3,
