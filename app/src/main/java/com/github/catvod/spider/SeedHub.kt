@@ -164,26 +164,61 @@ class SeedHub : Cloud() {
         val jobs = ArrayList<Job>()
 
         runBlocking {
-            doc.select("ul.pan-links > li > a")
-                .filter { it.attr("data-link").contains("quark") || it.attr("data-link").contains("baidu") }
-                .slice(IntRange(0, 10)).forEach { element ->
+            val docEle = doc.select("ul.pan-links > li > a")
+            docEle.filter { it.attr("data-link").contains("uc") }.take(2).forEach { element ->
 
-                    jobs += CoroutineScope(Dispatchers.IO).launch {
-                        var link = siteUrl + element.attr("href")
-                        val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
-                        link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
-                            ?.addEncodedQueryParameter(
-                                "movie_title", URLEncoder.encode(movieTitle)
-                            )?.build().toString()
-                        val string = OkHttp.string(link, header)
-                        val docEle = Jsoup.parse(string)
-                        docEle.select("a.direct-pan").attr("href").let {
-                            if (it.isNotEmpty()) {
-                                shareLinks.add(it)
-                            }
+                jobs += CoroutineScope(Dispatchers.IO).launch {
+                    var link = siteUrl + element.attr("href")
+                    val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
+                    link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
+                        ?.addEncodedQueryParameter(
+                            "movie_title", URLEncoder.encode(movieTitle)
+                        )?.build().toString()
+                    val string = OkHttp.string(link, header)
+                    val docEle = Jsoup.parse(string)
+                    docEle.select("a.direct-pan").attr("href").let {
+                        if (it.isNotEmpty()) {
+                            shareLinks.add(it)
                         }
                     }
                 }
+            }
+            docEle.filter { it.attr("data-link").contains("baidu") }.take(2).forEach { element ->
+
+                jobs += CoroutineScope(Dispatchers.IO).launch {
+                    var link = siteUrl + element.attr("href")
+                    val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
+                    link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
+                        ?.addEncodedQueryParameter(
+                            "movie_title", URLEncoder.encode(movieTitle)
+                        )?.build().toString()
+                    val string = OkHttp.string(link, header)
+                    val docEle = Jsoup.parse(string)
+                    docEle.select("a.direct-pan").attr("href").let {
+                        if (it.isNotEmpty()) {
+                            shareLinks.add(it)
+                        }
+                    }
+                }
+            }
+            docEle.filter { it.attr("data-link").contains("quark") }.take(2).forEach { element ->
+
+                jobs += CoroutineScope(Dispatchers.IO).launch {
+                    var link = siteUrl + element.attr("href")
+                    val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
+                    link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
+                        ?.addEncodedQueryParameter(
+                            "movie_title", URLEncoder.encode(movieTitle)
+                        )?.build().toString()
+                    val string = OkHttp.string(link, header)
+                    val docEle = Jsoup.parse(string)
+                    docEle.select("a.direct-pan").attr("href").let {
+                        if (it.isNotEmpty()) {
+                            shareLinks.add(it)
+                        }
+                    }
+                }
+            }
             jobs.joinAll()
             item.vodPlayUrl = super.detailContentVodPlayUrl(java.util.ArrayList(shareLinks))
             item.setVodPlayFrom(super.detailContentVodPlayFrom(java.util.ArrayList(shareLinks)))
