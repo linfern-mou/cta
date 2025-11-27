@@ -181,9 +181,9 @@ public class UCApi {
         List<String> playFrom = UCApi.get().getPlayFormatList();
         List<String> playFromtmp = new ArrayList<>();
         playFromtmp.add("uc原画");
-        for (String s : playFrom) {
+      /*  for (String s : playFrom) {
             playFromtmp.add("uc" + s);
-        }
+        }*/
         List<String> playUrl = new ArrayList<>();
 
         if (files.isEmpty()) {
@@ -233,7 +233,7 @@ public class UCApi {
 
             return Result.get().url(playUrl).string();
         }*/
-        return Result.get().url(ProxyServer.INSTANCE.buildProxyUrl(playUrl, header)).string();
+        return Result.get().url(ProxyServer.INSTANCE.buildProxyUrl(playUrl, new HashMap<>())).string();
     }
 
     private boolean testVideo(String url) {

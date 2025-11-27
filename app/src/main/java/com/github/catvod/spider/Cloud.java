@@ -96,7 +96,7 @@ public class Cloud extends Spider {
     }
 
     protected String detailContentVodPlayFrom(List<String> shareLinks) {
-        Collections.sort(shareLinks);
+        Collections.sort(shareLinks, Collections.reverseOrder());
         List<String> from = new ArrayList<>();
         int i = 0;
         for (String shareLink : shareLinks) {
@@ -123,7 +123,7 @@ public class Cloud extends Spider {
     }
 
     protected String detailContentVodPlayUrl(List<String> shareLinks) throws Exception {
-        Collections.sort(shareLinks);
+        Collections.sort(shareLinks, Collections.reverseOrder());
         List<String> urls = new ArrayList<>();
         for (String shareLink : shareLinks) {
             if (shareLink.matches(Util.patternUC)) {
