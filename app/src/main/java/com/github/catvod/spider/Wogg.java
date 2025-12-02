@@ -8,6 +8,8 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Util;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.jsoup.Jsoup;
@@ -26,9 +28,9 @@ import java.util.regex.Pattern;
 /**
  * @author zhixc
  */
-public class Wogg extends Ali {
+public class Wogg extends Cloud {
 
-    private final String siteUrl = "https://www.wogg.net";
+    private String siteUrl = "https://wogg.xxooo.cf/";
     private final Pattern regexCategory = Pattern.compile("/vodtype/(\\w+).html");
     private final Pattern regexPageTotal = Pattern.compile("\\$\\(\"\\.mac_total\"\\)\\.text\\('(\\d+)'\\);");
 
@@ -39,9 +41,19 @@ public class Wogg extends Ali {
     }
 
     @Override
-    public void init(Context context, String extend) {
+    public void init(Context context, String extend) throws Exception {
         JsonObject ext = Json.safeObject(extend);
-        super.init(context, ext.has("token") ? ext.get("token").getAsString() : "");
+        JsonArray siteList = ext.get("site").getAsJsonArray();
+        if (!siteList.isEmpty()) {
+            for (JsonElement jsonElement : siteList) {
+                String html = OkHttp.string(jsonElement.getAsString());
+                if (html.contains("电影")) {
+                    siteUrl = jsonElement.getAsString();
+                    break;
+                }
+            }
+        }
+        super.init(context, extend);
     }
 
     @Override
@@ -100,10 +112,12 @@ public class Wogg extends Ali {
         item.setTypeName(String.join(",", doc.select(".video-info-header div.tag-link a").eachText()));
 
         List<String> shareLinks = doc.select(".module-row-text").eachAttr("data-clipboard-text");
-        for (int i = 0; i < shareLinks.size(); i++) shareLinks.set(i, shareLinks.get(i).trim());
-
-        item.setVodPlayFrom(detailContentVodPlayFrom(shareLinks));
-        item.setVodPlayUrl(detailContentVodPlayUrl(shareLinks));
+        for (int i = 0; i < shareLinks.size(); i++) {
+            shareLinks.set(i, shareLinks.get(i).trim());
+            //String detailContent = super.detailContent(List.of(shareLinks.get(i)));
+        }
+        item.setVodPlayUrl(super.detailContentVodPlayUrl(shareLinks));
+        item.setVodPlayFrom(super.detailContentVodPlayFrom(shareLinks));
 
         Elements elements = doc.select(".video-info-item");
         for (Element e : elements) {
@@ -133,6 +147,7 @@ public class Wogg extends Ali {
     public String searchContent(String key, boolean quick, String pg) throws Exception {
         return searchContent(key, pg);
     }
+
 
     private String searchContent(String key, String pg) {
         String searchURL = siteUrl + String.format("/index.php/vodsearch/%s----------%s---.html", URLEncoder.encode(key), pg);

@@ -21,6 +21,7 @@ public class OkHttp {
 
     private OkHttpClient client;
 
+
     private static class Loader {
         static volatile OkHttp INSTANCE = new OkHttp();
     }
@@ -53,6 +54,10 @@ public class OkHttp {
         return url.startsWith("http") ? new OkRequest(GET, url, params, header).execute(client()).getBody() : "";
     }
 
+    public static OkResult get(String url, Map<String, String> params, Map<String, String> header) {
+        return new OkRequest(GET, url, params, header).execute(client());
+    }
+
     public static String post(String url, Map<String, String> params) {
         return post(url, params, null).getBody();
     }
@@ -71,6 +76,9 @@ public class OkHttp {
 
     public static String getLocation(String url, Map<String, String> header) throws IOException {
         return getLocation(client().newBuilder().followRedirects(false).followSslRedirects(false).build().newCall(new Request.Builder().url(url).headers(Headers.of(header)).build()).execute().headers().toMultimap());
+    }
+    public static Map<String, List<String>>  getLocationHeader(String url, Map<String, String> header) throws IOException {
+        return client().newBuilder().followRedirects(false).followSslRedirects(false).build().newCall(new Request.Builder().url(url).headers(Headers.of(header)).build()).execute().headers().toMultimap();
     }
 
     public static String getLocation(Map<String, List<String>> headers) {

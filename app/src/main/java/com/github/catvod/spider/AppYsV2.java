@@ -1,23 +1,19 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +25,7 @@ public class AppYsV2 extends Spider {
 
     @Override
     public void init(Context context, String extend) throws Exception {
-        super.init(context, extend);
+        super.init(context,extend);
         try {
             extInfos = extend.split("###");
         } catch (Exception ignored) {
@@ -365,7 +361,7 @@ public class AppYsV2 extends Spider {
             for (int i = 0; i < array.length(); i++) {
                 strings.add(array.getString(i));
             }
-            return TextUtils.join(",", strings);
+            return StringUtils.join(strings, ",");
         } catch (JSONException e) {
             return "";
         }
@@ -554,11 +550,7 @@ public class AppYsV2 extends Spider {
                 playFlags.add(flag);
                 playUrls.add(from.getString("url"));
                 String purl = from.optString("parse_api").trim();
-                ArrayList<String> parseUrls = parseUrlMap.get(flag);
-                if (parseUrls == null) {
-                    parseUrls = new ArrayList<>();
-                    parseUrlMap.put(flag, parseUrls);
-                }
+                ArrayList<String> parseUrls = parseUrlMap.get(flag)==null?new ArrayList<>():parseUrlMap.get(flag);
                 if (!purl.isEmpty() && !parseUrls.contains(purl)) parseUrls.add(purl);
             }
         } else if (URL.contains("xgapp")) {
@@ -581,11 +573,7 @@ public class AppYsV2 extends Spider {
                 playFlags.add(flag);
                 playUrls.add(from.getString("url"));
                 String purl = from.optString("parse_api").trim();
-                ArrayList<String> parseUrls = parseUrlMap.get(flag);
-                if (parseUrls == null) {
-                    parseUrls = new ArrayList<>();
-                    parseUrlMap.put(flag, parseUrls);
-                }
+                ArrayList<String> parseUrls = parseUrlMap.get(flag)==null?new ArrayList<>():parseUrlMap.get(flag);
                 if (!purl.isEmpty() && !parseUrls.contains(purl)) parseUrls.add(purl);
             }
         } else if (/*urlPattern2.matcher(URL).find()*/URL.contains(".vod")) {
@@ -613,12 +601,7 @@ public class AppYsV2 extends Spider {
                     String[] parse2 = from.getJSONObject("player_info").optString("parse2").split(",");
                     parses.addAll(Arrays.asList(parse1));
                     parses.addAll(Arrays.asList(parse2));
-                    ArrayList<String> parseUrls = parseUrlMap.get(flag);
-                    if (parseUrls == null) {
-                        parseUrls = new ArrayList<>();
-                        parseUrlMap.put(flag, parseUrls);
-                    }
-                    for (String purl : parses) {
+                    ArrayList<String> parseUrls = parseUrlMap.get(flag)==null?new ArrayList<>():parseUrlMap.get(flag);                    for (String purl : parses) {
                         if (purl.contains("http")) {
                             Matcher matcher = parsePattern1.matcher(purl);
                             if (matcher.find()) {
@@ -681,11 +664,11 @@ public class AppYsV2 extends Spider {
                     }
                 }
                 playFlags.add(flag);
-                playUrls.add(TextUtils.join("#", urls));
+                playUrls.add(StringUtils.join(urls, "#"));
             }
         }
-        vod.put("vod_play_from", TextUtils.join("$$$", playFlags));
-        vod.put("vod_play_url", TextUtils.join("$$$", playUrls));
+        vod.put("vod_play_from", StringUtils.join(playFlags, "$$$"));
+        vod.put("vod_play_url", StringUtils.join(playUrls, "$$$"));
     }
 
     // ######视频地址
@@ -782,7 +765,7 @@ public class AppYsV2 extends Spider {
         } else if (jsonPlayData.has("User-Agent")) {
             ua = jsonPlayData.optString("User-Agent", "");
         }
-        if (ua.trim().length() > 0) {
+        if (!ua.trim().isEmpty()) {
             headers.put("User-Agent", " " + ua);
         }
         String referer = "";
@@ -791,7 +774,7 @@ public class AppYsV2 extends Spider {
         } else if (jsonPlayData.has("Referer")) {
             referer = jsonPlayData.optString("Referer", "");
         }
-        if (referer.trim().length() > 0) {
+        if (!referer.trim().isEmpty()) {
             headers.put("Referer", " " + referer);
         }
 

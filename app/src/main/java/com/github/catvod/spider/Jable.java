@@ -1,11 +1,9 @@
 package com.github.catvod.spider;
 
-import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.Util;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,6 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import com.github.catvod.bean.Class;
+import com.github.catvod.utils.Util;
+
 public class Jable extends Spider {
 
     private static final String siteUrl = "https://jable.tv";
@@ -26,7 +27,9 @@ public class Jable extends Spider {
 
     private HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Util.CHROME);
+        headers.put("User-Agent", "PostmanRuntime/7.36.3");
+        headers.put("Host", "jable.tv");
+        headers.put("Postman-Token", "33290483-3c8d-413f-a160-0d3aea9e6f95");
         return headers;
     }
 

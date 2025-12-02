@@ -1,12 +1,9 @@
 package com.github.catvod.utils;
 
 import android.os.Environment;
+import com.github.catvod.crawler.SpiderDebug;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -67,6 +64,8 @@ public class Path {
             fos.close();
             return file;
         } catch (Exception ignored) {
+            ignored.printStackTrace();
+            SpiderDebug.log("写入文件出错：" + ignored.getMessage());
             return file;
         }
     }

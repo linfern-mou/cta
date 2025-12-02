@@ -145,7 +145,7 @@ public class JustLive extends Spider {
 
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
-        String searchUrl = siteUrl + "/api/live/search?platform=all&keyWords=" + URLEncoder.encode(key) + "&uid=35717d71548f4ec9ab6f327cc16ad2bf";
+        String searchUrl = siteUrl + "/api/live/search?platform=all&keyWords=" + URLEncoder.encode(key) + "&uid=f12b7678af364cb4b3c318559ade200e";
         String content = OkHttp.string(searchUrl, getHeader());
         List<Vod> list = new ArrayList<>();
         JSONArray dataArray = new JSONObject(content).getJSONArray("data");

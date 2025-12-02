@@ -1,7 +1,6 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
@@ -13,11 +12,7 @@ import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Json;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Qile
@@ -70,7 +65,7 @@ public class Jianpian extends Spider {
         String url = siteUrl + String.format("/api/crumb/list?area=%s&category_id=%s&page=%s&type=0&limit=24&sort=%s&year=%s", area, cateId, pg, by, year);
         Resp resp = Resp.objectFrom(OkHttp.string(url, getHeader()));
         for (Data data : resp.getData()) list.add(data.vod());
-        return Result.string(list);
+        return Result.string(Integer.parseInt(pg), Integer.parseInt(pg) + 1, 24, Integer.MAX_VALUE, list);
     }
 
     @Override
